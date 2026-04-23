@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>טיול הכרויות {{AGE_RANGE}} | {{TRIP_NAME}} | Gal Travels</title>
+  <meta name="description" content="טיול הכרויות לרווקים ורווקות בגילאי {{AGE_RANGE}} ב{{TRIP_NAME}}. חוויה ייחודית של הכרויות בטבע!">
+  <meta property="og:title" content="טיול הכרויות {{AGE_RANGE}} | {{TRIP_NAME}}">
+  <meta property="og:image" content="{{HERO_IMAGE}}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+  // ══ Config injected by builder — edit only via builder.html ══
+  const PRICE_CONFIG = {{PRICE_CONFIG_JSON}};
+  const TICKET_LINKS = {{TICKET_LINKS_JSON}};
+
+  // ── Auto-pick active tier by date ──
+  let ACTIVE_TIER = null;
+  (function pickActiveTier() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (const key in PRICE_CONFIG) PRICE_CONFIG[key].active = false;
+    for (const key in PRICE_CONFIG) {
+      const tier = PRICE_CONFIG[key];
+      if (tier.soldOut) continue;
+      if (tier.until) {
+        const end = new Date(tier.until + "T23:59:59.999");
+        if (today <= end) { tier.active = true; ACTIVE_TIER = tier; return; }
+      } else {
+        tier.active = true; ACTIVE_TIER = tier; return;
+      }
+    }
+  })();
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #c3a7c1;
+      --purple: {{PRIMARY_COLOR}};
+      --purple-dark: {{PRIMARY_DARK}};
+      --dark: #1a1a2e;
+      --gold: {{ACCENT_COLOR}};
+      --gold-dark: {{ACCENT_DARK}};
+      --red: #e74c3c;
+      --white: #ffffff;
+      --gray-bg: #f5f3f7;
+      --text: #2d2d2d;
+      --radius: 16px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Heebo', sans-serif;
+      color: var(--text);
+      background: var(--white);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeInRight {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.15); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.1); }
+      60% { transform: scale(1); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal-left.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .reveal-right {
+      opacity: 0;
+      transform: translateX(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal-right.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* ── Hero Section ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: url('{{HERO_IMAGE}}') center/cover no-repeat;
+      z-index: 0;
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg,
+        rgba(26,26,46,0.65) 0%,
+        rgba({{PRIMARY_RGB}},0.7) 50%,
+        rgba(26,26,46,0.85) 100%);
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 2rem 1.5rem;
+      max-width: 700px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: var(--white);
+      padding: 0.5rem 1.5rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.8s ease forwards;
+    }
+    .hero h1 {
+      font-size: clamp(1.8rem, 6vw, 3rem);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.3;
+      margin-bottom: 1rem;
+      animation: fadeInUp 0.8s 0.2s ease both;
+    }
+    .hero h1 .highlight {
+      background: linear-gradient(90deg, var(--gold), #f8d9a0, var(--gold));
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    .hero h2 {
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.8s 0.4s ease both;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--dark);
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.8s 0.6s ease both;
+      box-shadow: 0 4px 20px rgba({{ACCENT_RGB}},0.4);
+    }
+    .hero-cta:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba({{ACCENT_RGB}},0.6);
+    }
+    .hero-cta .arrow {
+      display: inline-block;
+      transition: transform 0.3s;
+    }
+    .hero-cta:hover .arrow { transform: translateX(-4px); }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      animation: float 2s ease-in-out infinite;
+    }
+    .hero-scroll svg {
+      width: 32px;
+      height: 32px;
+      stroke: rgba(255,255,255,0.6);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* ── Info Section ── */
+    .info {
+      background: var(--gray-bg);
+      padding: 4rem 1.5rem;
+    }
+    .info-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+      align-items: start;
+    }
+    @media (min-width: 768px) {
+      .info-container { grid-template-columns: 1fr 1fr; }
+    }
+    .info-image {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .info-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.6s ease;
+    }
+    .info-image:hover img { transform: scale(1.03); }
+
+    .info-text h3 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--purple);
+      margin-bottom: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+    .info-text h3::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      right: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+      border-radius: 2px;
+    }
+    .info-text p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+    .info-text .lead {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* Detail cards */
+    .detail-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      border-right: 4px solid var(--purple);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .detail-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .detail-card h4 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--purple);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .detail-card h4 .icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .detail-card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .detail-card ul li {
+      padding: 0.4rem 0;
+      padding-right: 1.5rem;
+      position: relative;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #555;
+    }
+    .detail-card ul li::before {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0.85rem;
+      width: 8px;
+      height: 8px;
+      background: var(--pink);
+      border-radius: 50%;
+    }
+    .detail-card ul li strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── Pricing Section ── */
+    .pricing {
+      padding: 4rem 1.5rem;
+      background: var(--white);
+    }
+    .pricing-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .pricing h3 {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--purple);
+      margin-bottom: 0.5rem;
+    }
+    .pricing .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .price-cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 600px) {
+      .price-cards { grid-template-columns: 1fr 1fr; }
+    }
+    .price-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+      border: 2px solid #eee;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .price-card:hover {
+      border-color: var(--purple);
+      transform: translateY(-4px);
+    }
+    .price-card.sold-out {
+      opacity: 0.55;
+    }
+    .price-card.sold-out::after {
+      content: 'נמכר!';
+      position: absolute;
+      top: 20px;
+      left: -35px;
+      background: var(--red);
+      color: white;
+      padding: 0.3rem 2.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transform: rotate(45deg);
+    }
+    .price-card .label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--pink);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+    .price-card .price {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--purple);
+      line-height: 1;
+    }
+    .price-card .price span {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #999;
+    }
+    .price-card .desc {
+      margin-top: 0.75rem;
+      font-size: 0.95rem;
+      color: #777;
+    }
+    .price-includes {
+      margin-top: 2rem;
+      text-align: center;
+      padding: 1.5rem;
+      background: var(--gray-bg);
+      border-radius: var(--radius);
+    }
+    .price-includes p {
+      font-size: 1rem;
+      color: #666;
+      line-height: 1.7;
+    }
+    .price-includes strong {
+      color: var(--purple);
+    }
+
+    /* ── Gallery ── */
+    .gallery {
+      padding: 3rem 1.5rem;
+      background: var(--gray-bg);
+    }
+    .gallery-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .gallery h3 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--purple);
+      margin-bottom: 2rem;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.6rem;
+      align-items: start;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    @media (min-width: 820px) {
+      .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 920px;
+      }
+    }
+    .gallery-item {
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      transition: transform 0.4s ease;
+    }
+    .gallery-item:hover { transform: scale(1.03); }
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ── Registration Section ── */
+    .registration {
+      position: relative;
+      padding: 5rem 1.5rem;
+      overflow: hidden;
+      background: var(--dark);
+    }
+    .registration-bg {
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background: url('https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/4ca5131b8ca56a4e450feb73802fc274.jpeg?maxWidth=1400') center/cover no-repeat;
+      transform: rotate(90deg);
+      z-index: 0;
+    }
+    .registration-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg,
+        rgba(26,26,46,0.8) 0%,
+        rgba({{PRIMARY_RGB}},0.75) 100%);
+    }
+    .registration-content {
+      position: relative;
+      z-index: 2;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .registration-content h2 {
+      font-size: clamp(1.5rem, 5vw, 2.2rem);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.4;
+      margin-bottom: 0.5rem;
+    }
+    .registration-content .age-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--dark);
+      padding: 0.4rem 1.5rem;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 2.5rem;
+    }
+
+    /* Form tabs */
+    .form-tabs {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .form-tab {
+      padding: 0.7rem 1.3rem;
+      border-radius: 50px;
+      border: 2px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      color: var(--white);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Heebo', sans-serif;
+    }
+    .form-tab:hover, .form-tab.active {
+      background: rgba(255,255,255,0.25);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    .form-tab.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    /* Form card */
+    .form-card {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius);
+      padding: 2rem;
+      display: none;
+    }
+    .form-card.active { display: block; }
+
+    .form-card .form-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 1.5rem;
+    }
+    .form-card .form-price {
+      font-size: 1.1rem;
+      color: var(--gold);
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-field {
+      margin-bottom: 1rem;
+    }
+    .form-field input[type="text"],
+    .form-field input[type="email"],
+    .form-field input[type="tel"] {
+      width: 100%;
+      padding: 1rem 1.2rem;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      color: var(--white);
+      font-size: 1rem;
+      font-family: 'Heebo', sans-serif;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+    .form-field input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+    .form-field input:focus {
+      border-color: var(--gold);
+      background: rgba(255,255,255,0.15);
+      box-shadow: 0 0 0 4px rgba({{ACCENT_RGB}},0.15);
+    }
+    .form-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1.2rem 0;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .form-checkbox input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+    .form-submit {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--dark);
+      border: none;
+      border-radius: 12px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-family: 'Heebo', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba({{ACCENT_RGB}},0.3);
+    }
+    .form-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba({{ACCENT_RGB}},0.5);
+    }
+    .form-submit:active {
+      transform: translateY(0);
+    }
+    /* Link variant — shown as a button but semantically an <a> */
+    a.form-submit { display: block; text-align: center; text-decoration: none; }
+    a.form-submit[aria-disabled="true"] {
+      opacity: 0.55;
+      pointer-events: none;
+      box-shadow: none;
+    }
+    .form-sold-out {
+      text-align: center;
+      padding: 2rem;
+      color: var(--white);
+    }
+    .form-sold-out .sold-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      animation: heartbeat 2s ease-in-out infinite;
+    }
+    .form-sold-out p {
+      font-size: 1.1rem;
+      opacity: 0.8;
+    }
+
+    /* ── Policy checkboxes in form ── */
+    .policy-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin: 0.8rem 0;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      text-align: right;
+    }
+    .policy-check input[type="checkbox"] {
+      width: 20px;
+      min-width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+    .policy-check a {
+      color: var(--gold);
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .policy-check a:hover {
+      color: #f8d9a0;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius);
+      max-width: 550px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 2rem;
+      position: relative;
+      transform: translateY(30px) scale(0.95);
+      transition: transform 0.3s ease;
+      direction: rtl;
+    }
+    .modal-overlay.open .modal {
+      transform: translateY(0) scale(1);
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--gray-bg);
+      color: var(--text);
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close:hover {
+      background: #e0dce4;
+    }
+    .modal h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--purple);
+      margin-bottom: 1rem;
+      padding-left: 40px;
+    }
+    .modal p {
+      font-size: 0.95rem;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 0.5rem;
+    }
+    .modal-confirm {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.8rem;
+      background: var(--purple);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Heebo', sans-serif;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .modal-confirm:hover {
+      background: var(--purple-dark);
+    }
+
+    /* ── Policy Section ── */
+    .policy {
+      padding: 3rem 1.5rem;
+      background: var(--white);
+    }
+    .policy-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .policy details {
+      background: var(--gray-bg);
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .policy summary {
+      padding: 1.2rem 1.5rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--purple);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      list-style: none;
+      transition: background 0.3s;
+    }
+    .policy summary::-webkit-details-marker { display: none; }
+    .policy summary::before {
+      content: '+';
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--pink);
+      transition: transform 0.3s;
+    }
+    .policy details[open] summary::before {
+      transform: rotate(45deg);
+    }
+    .policy summary:hover { background: rgba({{PRIMARY_RGB}},0.05); }
+    .policy .policy-content {
+      padding: 0 1.5rem 1.5rem;
+      color: #666;
+      line-height: 1.8;
+      font-size: 0.95rem;
+    }
+
+    /* ── Social / Footer ── */
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-top: 2.5rem;
+    }
+    .social-link {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+    .social-link:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-3px);
+    }
+    .social-link svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--white);
+    }
+
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.85rem;
+    }
+    footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    /* ── Trust badges ── */
+    .trust {
+      padding: 2rem 1.5rem;
+      background: var(--white);
+    }
+    .trust-container {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .trust-container img {
+      height: 40px;
+      width: auto;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+      filter: grayscale(30%);
+    }
+    .trust-container img:hover { opacity: 1; filter: none; }
+
+    /* ── Utility ── */
+    .container { max-width: 1000px; margin: 0 auto; }
+    .text-center { text-align: center; }
+
+    /* ── Fixed bottom CTA bar ── */
+    .fixed-bottom-cta {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0.8rem 1.5rem;
+      background: rgba(26,26,46,0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba({{ACCENT_RGB}},0.3);
+      display: flex;
+      justify-content: center;
+      transform: translateY(100%);
+      transition: transform 0.4s ease;
+    }
+    .fixed-bottom-cta.visible {
+      transform: translateY(0);
+    }
+    .fixed-bottom-cta a {
+      display: block;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--dark);
+      padding: 0.9rem 2rem;
+      border-radius: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 20px rgba({{ACCENT_RGB}},0.4);
+      transition: all 0.3s ease;
+    }
+    .fixed-bottom-cta a:hover {
+      box-shadow: 0 6px 25px rgba({{ACCENT_RGB}},0.6);
+    }
+
+    /* add bottom padding to body so footer isn't hidden behind the bar */
+    body { padding-bottom: 70px; }
+
+    /* ── Particle decorations ── */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      animation: float 6s ease-in-out infinite;
+    }
+    .particle:nth-child(1) { width: 80px; height: 80px; top: 20%; right: 10%; animation-delay: 0s; }
+    .particle:nth-child(2) { width: 50px; height: 50px; top: 60%; right: 70%; animation-delay: 1.5s; }
+    .particle:nth-child(3) { width: 120px; height: 120px; top: 10%; right: 60%; animation-delay: 3s; animation-duration: 8s; }
+    .particle:nth-child(4) { width: 40px; height: 40px; top: 80%; right: 30%; animation-delay: 2s; }
+    .particle:nth-child(5) { width: 60px; height: 60px; top: 40%; right: 85%; animation-delay: 4s; animation-duration: 7s; }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .hero-cta {
+        padding: 0.9rem 2rem;
+        font-size: 1.1rem;
+      }
+      .detail-card { padding: 1.2rem; }
+      .form-card { padding: 1.5rem; }
+      .price-card .price { font-size: 2.2rem; }
+    }
+
+    /* ── Flash Sale Banner (inline, prominent) ── */
+    .flash-banner {
+      display: none;
+      margin: 0 auto;
+      max-width: 720px;
+      padding: 1rem;
+    }
+    .flash-banner.visible { display: block; animation: bannerIn .5s ease; }
+    @keyframes bannerIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .flash-banner-inner {
+      position: relative;
+      background: #fff;
+      border-radius: 18px;
+      padding: 1rem 1.2rem;
+      box-shadow: 0 10px 30px rgba(231,76,60,.22);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      overflow: hidden;
+    }
+    .flash-banner-inner::before {
+      content: "";
+      position: absolute; inset: 0;
+      padding: 3px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #e74c3c 0%, #f39c12 50%, #e74c3c 100%);
+      background-size: 200% 200%;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      animation: flashBorder 3s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes flashBorder {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+    .flash-banner-bolt {
+      font-size: 2rem;
+      line-height: 1;
+      animation: bolt 1.4s ease-in-out infinite;
+    }
+    @keyframes bolt {
+      0%,100% { transform: scale(1)    rotate(0); }
+      50%     { transform: scale(1.2)  rotate(-8deg); }
+    }
+    .flash-banner-text {
+      flex: 1 1 180px;
+      display: flex; flex-direction: column; gap: 2px;
+      min-width: 0;
+    }
+    .flash-banner-title {
+      font-size: 1.05rem; font-weight: 800; color: #222;
+    }
+    .flash-banner-price {
+      font-size: 1.6rem; font-weight: 900; color: #e74c3c;
+      line-height: 1.1;
+    }
+    .flash-banner-price small {
+      font-size: .85rem; color: #777; font-weight: 600; margin-inline-start: .4rem;
+    }
+    .flash-banner-countdown {
+      display: flex; gap: .35rem;
+      direction: ltr;   /* hours on left, seconds on right */
+    }
+    .flash-count-box {
+      background: #fff6f5;
+      border: 2px solid #e74c3c;
+      border-radius: 10px;
+      padding: .25rem .4rem;
+      min-width: 42px;
+      text-align: center;
+    }
+    .flash-count-num {
+      font-size: 1rem; font-weight: 900; color: #e74c3c;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .flash-count-label { font-size: .6rem; color: #888; margin-top: 2px; }
+    .flash-banner-cta {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--purple) 100%);
+      color: #fff; text-decoration: none;
+      padding: .7rem 1.3rem;
+      border-radius: 50px;
+      font-weight: 800; font-size: .95rem;
+      box-shadow: 0 4px 14px rgba({{PRIMARY_RGB}},.35);
+      white-space: nowrap;
+      transition: transform .2s;
+    }
+    .flash-banner-cta:hover { transform: translateY(-2px); }
+    @media (max-width: 520px) {
+      .flash-banner-inner {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: .55rem;
+        padding: .8rem 1rem;
+      }
+      .flash-banner-bolt { font-size: 1.7rem; }
+      .flash-banner-text { align-items: center; gap: 0; }
+      .flash-banner-title { font-size: .95rem; }
+      .flash-banner-price { font-size: 1.35rem; }
+      .flash-banner-countdown { justify-content: center; }
+      .flash-banner-cta { align-self: center; padding: .55rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ Hero ═══ -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="particles">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">Gal Travels | טיולי הכרויות</div>
+      <h1>נמאס לך כבר מטינדר, אוקייקופיד<br>וכל שאר <span class="highlight">האפליקציות?</span></h1>
+      <h2>טיול הכרויות זה בול בשבילך!</h2>
+      <a href="#register" class="hero-cta">
+        <span class="arrow">&larr;</span>
+        הירשמו היום
+      </a>
+    </div>
+    <div class="hero-scroll">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </div>
+  </section>
+
+  <!-- ═══ Flash Sale Banner (inline, shows only while flashSale tier is active) ═══ -->
+  <section class="flash-banner" id="flashBanner" aria-hidden="true">
+    <div class="flash-banner-inner">
+      <span class="flash-banner-bolt">&#9889;</span>
+      <div class="flash-banner-text">
+        <span class="flash-banner-title" id="flashTitle"></span>
+        <span class="flash-banner-price" id="flashPrice"></span>
+      </div>
+      <div class="flash-banner-countdown" id="flashCountdown"></div>
+      <a class="flash-banner-cta" href="#register">להירשם &larr;</a>
+    </div>
+  </section>
+
+  <!-- ═══ Info Section ═══ -->
+  <section class="info">
+    <div class="info-container">
+      <div class="info-image reveal-right">
+        <img src="{{INFO_IMAGE}}" alt="טיול הכרויות ב{{TRIP_NAME}}" loading="lazy">
+      </div>
+      <div class="info-text reveal-left">
+        <h3>טיולי הכרויות!</h3>
+        <p class="lead">הצטרפו אלינו לטיול הכרויות לרווקים ורווקות בגילאי {{AGE_RANGE}}, המשלב חוויות של הכרות, טיול מרגיע &ndash; כל זאת באווירה נינוחה וטבעית.</p>
+
+        <div class="detail-card">
+          <h4><span class="icon">&#128197;</span> תאריכים ושעות</h4>
+          <ul>
+            <li><strong>תאריך:</strong> {{TRIP_DATE}}</li>
+            <li><strong>שעת יציאה:</strong> {{START_TIME}} בבוקר</li>
+            <li><strong>שעת סיום:</strong> {{END_TIME}}</li>
+          </ul>
+        </div>
+
+        <div class="detail-card">
+          <h4><span class="icon">&#127956;</span> מה מחכה לכם/ן בטיול?</h4>
+          <ul>
+            <li><strong>טיול טבע ייחודי</strong> &ndash; {{DAY_OF_WEEK}} בבוקר, טיול רגלי ב{{TRIP_NAME}}</li>
+            <li><strong>רמת קושי: קל</strong> &ndash; מרחק: {{DISTANCE}}</li>
+            <li>ההגעה באופן עצמאי, ישלח טופס טרמפים מסודר לנרשמים/ות</li>
+            <li><strong>ארוחת בוקר:</strong> כריכים עם תוספות שונות, ירקות ופינת קפה/תה</li>
+            <li><strong>צילום מקצועי</strong> ותמונות ערוכות</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Pricing ═══ -->
+  <section class="pricing" id="pricing">
+    <div class="pricing-container">
+      <h3 class="reveal">מחירים</h3>
+      <p class="subtitle reveal">כולל הדרכה, תמונות מקצועיות, אירגון הטיול ואוכל בבוקר</p>
+
+      <div class="price-cards" id="priceTiers">
+        <!-- Filled by JS from PRICE_CONFIG -->
+      </div>
+
+      <div class="price-includes reveal">
+        <p><strong>מה כלול?</strong> הדרכה, תמונות מקצועיות, אירגון הטיול, אוכל בבוקר.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ Policy (before registration) ═══ -->
+  <section class="policy">
+    <div class="policy-container">
+      <details open class="reveal">
+        <summary>מדיניות ביטול</summary>
+        <div class="policy-content">
+          <p>החל מ-24 שעות לאחר הרכישה אין החזר עמלת אשראי (2%).</p>
+          <p>מ-10 ימים לפני תאריך היציאה יחויב סכום של 50% מעלות הטיול.</p>
+          <p>מ-5 ימים לפני תאריך היציאה יחויב סכום של 75% מעלות הטיול.</p>
+          <p>אין החזר כספי החל מ-48 שעות לפני תאריך היציאה.</p>
+          <p>הטיול יכול להידחות/להתבטל עקב מזג אוויר, חוסר באיזון מגדרי או מצב ביטחוני.</p>
+        </div>
+      </details>
+      <details open class="reveal">
+        <summary>תיעוד וצילום בטיול &ndash; חשוב לקרוא</summary>
+        <div class="policy-content">
+          <p>הטיול כולל תיעוד מקצועי לצרכי שיווק ופרסום (רשתות חברתיות, אתר, חוברות ועוד).</p>
+          <p>ההשתתפות בטיול מהווה הסכמה מפורשת לצילום ולשימוש בחומרים אלו.</p>
+          <p>אם קיימת רגישות חריגה לנושא, יש ליצור קשר לפני ההרשמה.</p>
+          <p>שימו לב: מאחר והצילום הוא חלק בלתי נפרד מהטיול, לא ניתן להתחייב להימנעות מוחלטת מהופעה בצילומים.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ═══ Registration ═══ -->
+  <section class="registration" id="register">
+    <div class="registration-bg"></div>
+    <div class="registration-content">
+      <h2>נפתחה הרשמה לטיול הקרוב!<br>מהרו לתפוס מקום</h2>
+      <div class="age-badge">גילאי {{AGE_RANGE}}</div>
+
+      <!-- Tabs (builder hides the tab whose ticket link is empty) -->
+      <div class="form-tabs">
+        <button class="form-tab active" data-target="form-women-single" data-ticket="womenSingle">כרטיס לנשים</button>
+        <button class="form-tab"        data-target="form-women-couple" data-ticket="womenCouple">כרטיס זוגי לנשים</button>
+        <button class="form-tab"        data-target="form-men"          data-ticket="men">כרטיס לגברים</button>
+      </div>
+
+      <!-- Women single -->
+      <div class="form-card active" id="form-women-single" data-ticket="womenSingle">
+        <div class="form-title">כרטיס לנשים</div>
+        <div class="form-price" data-price-kind="single">—</div>
+        <label class="policy-check">
+          <input type="checkbox" class="agree" required>
+          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('cancel')">מדיניות הביטול</a></span>
+        </label>
+        <label class="policy-check">
+          <input type="checkbox" class="agree" required>
+          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('photo')">מדיניות התיעוד והצילום</a></span>
+        </label>
+        <a class="form-submit ticket-link" href="#" target="_blank" rel="noopener" aria-disabled="true">הרשמה ומעבר לתשלום</a>
+      </div>
+
+      <!-- Women couple -->
+      <div class="form-card" id="form-women-couple" data-ticket="womenCouple">
+        <div class="form-title">כרטיס זוגי לנשים</div>
+        <div class="form-price" data-price-kind="couple">—</div>
+        <label class="policy-check">
+          <input type="checkbox" class="agree" required>
+          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('cancel')">מדיניות הביטול</a></span>
+        </label>
+        <label class="policy-check">
+          <input type="checkbox" class="agree" required>
+          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('photo')">מדיניות התיעוד והצילום</a></span>
+        </label>
+        <a class="form-submit ticket-link" href="#" target="_blank" rel="noopener" aria-disabled="true">הרשמה ומעבר לתשלום</a>
+      </div>
+
+      <!-- Men -->
+      <div class="form-card" id="form-men" data-ticket="men">
+        <div class="form-title">כרטיס לגברים</div>
+        <div class="form-price" data-price-kind="single">—</div>
+        <label class="policy-check">
+          <input type="checkbox" class="agree" required>
+          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('cancel')">מדיניות הביטול</a></span>
+        </label>
+        <label class="policy-check">
+          <input type="checkbox" class="agree" required>
+          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('photo')">מדיניות התיעוד והצילום</a></span>
+        </label>
+        <a class="form-submit ticket-link" href="#" target="_blank" rel="noopener" aria-disabled="true">הרשמה ומעבר לתשלום</a>
+      </div>
+
+      <!-- Social Links -->
+      <div class="social-links reveal">
+        <a href="https://instagram.com/galtravels_" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
+          <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+        <a href="https://www.facebook.com/profile.php?id=100093434869732" target="_blank" rel="noopener" class="social-link" aria-label="Facebook">
+          <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+        <a href="https://www.galtravels.info/" target="_blank" rel="noopener" class="social-link" aria-label="Website">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Trust Badges ═══ -->
+  <section class="trust">
+    <div class="trust-container reveal">
+      <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/0a3dd2175d8ecdaee24d7dead03e6602_184X52.jpeg?ver=3.12" alt="אמצעי תשלום" loading="lazy">
+      <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/9db2811d3b71b670f05c49f22937eee0_184X66.jpeg?ver=3.12" alt="אמצעי תשלום" loading="lazy">
+      <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/e8e7f7dd4e7c12e5ca09ce6a218d7e92_184X92.jpeg?ver=3.12" alt="אמצעי תשלום" loading="lazy">
+      <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/d79ca39ee4c1edf96748101f05b74eae_184X65.jpeg?ver=3.12" alt="אמצעי תשלום" loading="lazy">
+    </div>
+  </section>
+
+  <!-- ═══ Reviews (WhatsApp chat screenshots from past participants) ═══ -->
+  <section class="gallery">
+    <div class="gallery-container">
+      <h3 class="reveal">מה אומרים המשתתפים שלנו?</h3>
+      <div class="gallery-grid">
+        <div class="gallery-item reveal">
+          <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/5c139ed5910a452a8230095a51005dbe_184X109.png?ver=3.12" alt="תגובה ממשתתף/ת" loading="lazy">
+        </div>
+        <div class="gallery-item reveal">
+          <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/c2f453856cf123a67e3a04fb18289b73_184X92.jpeg?ver=3.12" alt="תגובה ממשתתף/ת" loading="lazy">
+        </div>
+        <div class="gallery-item reveal">
+          <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/59318360b73c94dbd969c5fbc72de496_184X177.jpeg?ver=3.12" alt="תגובה ממשתתף/ת" loading="lazy">
+        </div>
+        <div class="gallery-item reveal">
+          <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/601c60b5bbb4d552daf6067de1e48b65_184X285.jpeg?ver=3.12" alt="תגובה ממשתתף/ת" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Footer ═══ -->
+  <footer>
+    <p>&copy; 2025 <a href="https://www.galtravels.info/" target="_blank">Gal Travels</a> &ndash; כל הזכויות שמורות</p>
+  </footer>
+
+  <!-- ═══ Fixed Bottom CTA ═══ -->
+  <div class="fixed-bottom-cta" id="fixedCta">
+    <a href="#register">הרשמה ומעבר לתשלום</a>
+  </div>
+
+  <!-- ═══ Policy Modals ═══ -->
+  <div class="modal-overlay" id="modal-cancel">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('cancel')">&times;</button>
+      <h3>מדיניות ביטול</h3>
+      <p>החל מ-24 שעות לאחר הרכישה אין החזר עמלת אשראי (2%).</p>
+      <p>מ-10 ימים לפני תאריך היציאה יחויב סכום של 50% מעלות הטיול.</p>
+      <p>מ-5 ימים לפני תאריך היציאה יחויב סכום של 75% מעלות הטיול.</p>
+      <p>אין החזר כספי החל מ-48 שעות לפני תאריך היציאה.</p>
+      <p>הטיול יכול להידחות/להתבטל עקב מזג אוויר, חוסר באיזון מגדרי או מצב ביטחוני.</p>
+      <button class="modal-confirm" onclick="closeModal('cancel')">קראתי, סגור</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-photo">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('photo')">&times;</button>
+      <h3>תיעוד וצילום בטיול</h3>
+      <p>הטיול כולל תיעוד מקצועי לצרכי שיווק ופרסום (רשתות חברתיות, אתר, חוברות ועוד).</p>
+      <p>ההשתתפות בטיול מהווה הסכמה מפורשת לצילום ולשימוש בחומרים אלו.</p>
+      <p>אם קיימת רגישות חריגה לנושא, יש ליצור קשר לפני ההרשמה.</p>
+      <p>שימו לב: מאחר והצילום הוא חלק בלתי נפרד מהטיול, לא ניתן להתחייב להימנעות מוחלטת מהופעה בצילומים.</p>
+      <button class="modal-confirm" onclick="closeModal('photo')">קראתי, סגור</button>
+    </div>
+  </div>
+
+  <script>
+    // ── Modals ──
+    function openModal(type) {
+      event.preventDefault();
+      event.stopPropagation();
+      document.getElementById('modal-' + type).classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal(type) {
+      document.getElementById('modal-' + type).classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      });
+    });
+
+    // ══ Render prices from PRICE_CONFIG ══
+    (function() {
+      const track = document.getElementById('priceTiers');
+      for (const key in PRICE_CONFIG) {
+        const c = PRICE_CONFIG[key];
+        let cls = 'price-card reveal';
+        if (c.soldOut) cls += ' sold-out';
+        let html = '<div class="label">' + c.label + '</div>';
+        html += '<div class="price">' + c.single + ' <span>&#8362;</span></div>';
+        if (c.soldOut) html += '<div class="desc">נגמר!</div>';
+        else if (c.couple) html += '<div class="desc">זוגי: ' + c.couple + ' &#8362;</div>';
+        else html += '<div class="desc">' + (c.note || '') + '</div>';
+        if (c.active) html += '<div style="margin-top:0.5rem;"><span style="background:var(--purple);color:#fff;padding:0.2rem 0.8rem;border-radius:50px;font-size:0.75rem;font-weight:700;">המחיר הנוכחי</span></div>';
+        const div = document.createElement('div');
+        div.className = cls;
+        div.innerHTML = html;
+        track.appendChild(div);
+      }
+      // Update form card prices from active tier
+      if (ACTIVE_TIER) {
+        document.querySelectorAll('.form-card').forEach(card => {
+          const el = card.querySelector('[data-price-kind]');
+          if (!el) return;
+          const kind = el.dataset.priceKind;
+          const amt = (kind === 'couple') ? ACTIVE_TIER.couple : ACTIVE_TIER.single;
+          if (amt == null) { card.dataset.hidden = '1'; return; }
+          el.textContent = amt + ' ₪';
+        });
+      }
+      if (false) { var wp, cp, mp;
+        if (mp) mp.textContent = ACTIVE_TIER.single + ' ₪';
+        if (wp) wp.textContent = ACTIVE_TIER.single + ' \u20AA';
+        if (cp && ACTIVE_TIER.couple) cp.textContent = ACTIVE_TIER.couple + ' \u20AA';
+      }
+    })();
+
+    // ══ Ticket links + policy-checkbox gating ══
+    (function initTicketLinks() {
+      document.querySelectorAll('.form-card').forEach(card => {
+        const ticket = card.dataset.ticket;
+        const url = (typeof TICKET_LINKS !== 'undefined') && TICKET_LINKS[ticket];
+        const linkEl = card.querySelector('a.ticket-link');
+        const tab = document.querySelector('.form-tab[data-ticket="' + ticket + '"]');
+        if (!url || card.dataset.hidden) {
+          if (tab) tab.style.display = 'none';
+          card.style.display = 'none';
+          return;
+        }
+        if (linkEl) linkEl.setAttribute('href', url);
+        const agrees = card.querySelectorAll('input.agree');
+        const refresh = () => {
+          const ok = Array.from(agrees).every(cb => cb.checked);
+          if (linkEl) linkEl.setAttribute('aria-disabled', ok ? 'false' : 'true');
+        };
+        agrees.forEach(cb => cb.addEventListener('change', refresh));
+        refresh();
+      });
+      const visibleTabs = Array.from(document.querySelectorAll('.form-tab')).filter(t => t.style.display !== 'none');
+      if (visibleTabs.length && !visibleTabs.some(t => t.classList.contains('active'))) {
+        document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-card').forEach(c => c.classList.remove('active'));
+        visibleTabs[0].classList.add('active');
+        const target = document.getElementById(visibleTabs[0].dataset.target);
+        if (target) target.classList.add('active');
+      }
+    })();
+
+    // ── Scroll reveal ──
+    const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.classList.add('visible');
+          }, i * 100);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    revealElements.forEach(el => observer.observe(el));
+
+    // ── Form tabs ──
+    document.querySelectorAll('.form-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        if (tab.classList.contains('disabled')) return;
+        document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-card').forEach(f => f.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.target).classList.add('active');
+      });
+    });
+
+    // ── Flash Sale Banner (inline) ──
+    (function initFlashBanner() {
+      if (!ACTIVE_TIER || ACTIVE_TIER !== PRICE_CONFIG.flashSale) return;
+      const banner = document.getElementById('flashBanner');
+      if (!banner) return;
+
+      const endDate = new Date(PRICE_CONFIG.flashSale.until + 'T23:59:59');
+      const countdownEl = document.getElementById('flashCountdown');
+
+      // Fill title + price from active tier so builder doesn't need tokens here
+      const titleEl = document.getElementById('flashTitle');
+      const priceEl = document.getElementById('flashPrice');
+      if (titleEl) titleEl.textContent = (PRICE_CONFIG.flashSale.label || 'מחיר מיוחד') + ' — מוגבל בזמן';
+      if (priceEl) {
+        const [yy, mm, dd] = PRICE_CONFIG.flashSale.until.split('-');
+        priceEl.innerHTML = PRICE_CONFIG.flashSale.single + ' ₪ ' +
+          '<small>עד ' + parseInt(dd,10) + '.' + parseInt(mm,10) + ' בחצות</small>';
+      }
+
+      function render() {
+        const diff = endDate - new Date();
+        if (diff <= 0) { banner.classList.remove('visible'); return; }
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        const box = (n, l) =>
+          '<div class="flash-count-box"><div class="flash-count-num">' +
+          String(n).padStart(2, '0') + '</div><div class="flash-count-label">' + l + '</div></div>';
+        countdownEl.innerHTML = box(h, 'שעות') + box(m, 'דקות') + box(s, 'שניות');
+      }
+      render();
+      setInterval(render, 1000);
+      banner.classList.add('visible');
+      banner.setAttribute('aria-hidden', 'false');
+    })();
+
+    // ── Parallax on hero bg ──
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrolled = window.pageYOffset;
+          const heroBg = document.querySelector('.hero-bg');
+          if (heroBg && scrolled < window.innerHeight) {
+            heroBg.style.transform = `translateY(${scrolled * 0.4}px)`;
+          }
+          // Show fixed CTA after hero, hide when at registration
+          const fixedCta = document.getElementById('fixedCta');
+          const heroEl = document.querySelector('.hero');
+          const regEl = document.getElementById('register');
+          if (fixedCta && heroEl && regEl) {
+            const pastHero = scrolled > heroEl.offsetHeight * 0.5;
+            const atReg = regEl.getBoundingClientRect().top < window.innerHeight * 0.8;
+            if (pastHero && !atReg) {
+              fixedCta.classList.add('visible');
+            } else {
+              fixedCta.classList.remove('visible');
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // ── Smooth reveal for men's sold-out tab ──
+    document.querySelector('.form-tab.disabled').addEventListener('click', () => {
+      document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form-card').forEach(f => f.classList.remove('active'));
+      document.querySelector('.form-tab.disabled').classList.add('active');
+      document.getElementById('form-men').classList.add('active');
+    });
+  </script>
+</body>
+</html>

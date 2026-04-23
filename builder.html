@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gal Travels — Builder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, "Heebo", sans-serif;
+      background: #f4f4f6;
+      color: #222;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 1.25rem; margin-bottom: 6px; }
+    .sub { color: #666; font-size: 0.9rem; margin-bottom: 16px; }
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      padding: 12px;
+      border: 1px solid #ccd;
+      border-radius: 8px;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      direction: ltr;
+    }
+    .actions { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+    button.primary { background: #513f83; color: #fff; }
+    button.primary:hover { background: #3e2f6b; }
+    button.secondary { background: #ddd; color: #222; }
+    button.secondary:hover { background: #ccc; }
+    button[disabled] { opacity: 0.4; cursor: not-allowed; }
+    #log {
+      background: #1e1e24;
+      color: #cfa;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.78rem;
+      margin: 12px 0;
+      max-height: 180px;
+      overflow: auto;
+      direction: ltr;
+    }
+    #log .ok  { color: #8f8; }
+    #log .warn{ color: #ff8; }
+    #log .err { color: #f66; }
+    iframe {
+      width: 100%;
+      min-height: 700px;
+      border: 1px solid #ccd;
+      border-radius: 8px;
+      background: #fff;
+      margin-top: 12px;
+    }
+    .palette-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 10px 0;
+      align-items: center;
+    }
+    .palette-row .label { font-size: 0.85rem; color: #555; margin-inline-end: 4px; }
+    .palette {
+      width: 56px;
+      height: 36px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      transition: transform 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .palette:hover { transform: translateY(-1px); }
+    .palette.active { border-color: #222; }
+    .palette.active::after {
+      content: "✓";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 1rem;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    .palette .a, .palette .b { width: 100%; height: 100%; }
+    .palette-custom {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      border: 1px dashed #bbb;
+      border-radius: 10px;
+      padding: 2px 6px;
+    }
+    .palette-custom input[type="color"] {
+      width: 28px; height: 28px;
+      border: none; padding: 0; background: none; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Gal Travels — Builder</h1>
+    <p class="sub">Paste the HTML of Gal's existing landing page. Click Generate.</p>
+
+    <textarea id="src" placeholder="Paste the full HTML here…"></textarea>
+
+    <div class="palette-row" id="palettes">
+      <span class="label">Palette:</span>
+      <!-- palettes injected by JS -->
+      <div class="palette-custom" title="Custom colors">
+        <input type="color" id="customPrimary" value="#513f83" aria-label="primary">
+        <input type="color" id="customAccent"  value="#f0c27f" aria-label="accent">
+        <button class="secondary" id="customApply" style="padding:4px 8px;font-size:0.78rem">Use</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary"   id="genBtn">Generate</button>
+      <button class="secondary" id="dlBtn"  disabled>Download .html</button>
+      <button class="secondary" id="cpBtn"  disabled>Copy HTML</button>
+    </div>
+
+    <div id="log"></div>
+
+    <iframe id="preview" title="preview"></iframe>
+  </div>
+
+<script>
+(function () {
+  const $  = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const logEl = $('#log');
+  const log = (m, c = '') => {
+    const el = document.createElement('div');
+    el.className = c; el.textContent = '• ' + m;
+    logEl.appendChild(el);
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+
+  // ── Color palettes (primary, primary-dark, accent, accent-dark) ──
+  const PALETTES = [
+    { name: 'Purple & Gold',  primary: '#513f83', primaryDark: '#3e2f6b', accent: '#f0c27f', accentDark: '#e8b55a' },
+    { name: 'Sage & Coral',   primary: '#5a9a8a', primaryDark: '#3d6b5f', accent: '#e8a598', accentDark: '#d4857a' },
+    { name: 'Ocean & Sand',   primary: '#2b6cb0', primaryDark: '#1a4a7f', accent: '#f6e05e', accentDark: '#d4b830' },
+    { name: 'Forest & Rose',  primary: '#2f855a', primaryDark: '#1f5c3f', accent: '#f687b3', accentDark: '#d4628e' },
+    { name: 'Sunset',         primary: '#c53030', primaryDark: '#8b2020', accent: '#f6ad55', accentDark: '#d4873a' },
+  ];
+  let activePalette = PALETTES[0];
+
+  function renderPaletteRow() {
+    const row = document.getElementById('palettes');
+    PALETTES.forEach((p, i) => {
+      const el = document.createElement('div');
+      el.className = 'palette' + (p === activePalette ? ' active' : '');
+      el.title = p.name;
+      el.innerHTML =
+        '<div class="a" style="background:' + p.primary + '"></div>' +
+        '<div class="b" style="background:' + p.accent  + '"></div>';
+      el.addEventListener('click', () => {
+        activePalette = p;
+        // refresh selection state
+        row.querySelectorAll('.palette').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        // If a preview exists, regenerate automatically so Gal sees instant color change
+        if (window.__lastSrc) generate();
+      });
+      row.insertBefore(el, row.querySelector('.palette-custom'));
+    });
+  }
+
+  // ── Defaults used when extraction can't find a value ──
+  const DEFAULTS = {
+    TRIP_NAME:   'נחל',
+    AGE_RANGE:   '25-35',
+    DAY_OF_WEEK: 'יום שישי',
+    TRIP_DATE:   'יום שישי',
+    START_TIME:  '08:00',
+    END_TIME:    '14:00',
+    DISTANCE:    'כ-3 קילומטרים',
+    HERO_IMAGE:  'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/19aee3702e9ac6ce5eaeaad05fb4f948.jpeg?maxWidth=1400',
+    INFO_IMAGE:  'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/c923808c4808f26f60b5244ff2476ca6_450X441.jpeg?ver=3.12',
+  };
+
+  // Hex (#rrggbb) → "r,g,b" string for rgba() interpolation
+  function hexToRgb(hex) {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return ((n >> 16) & 0xff) + ',' + ((n >> 8) & 0xff) + ',' + (n & 0xff);
+  }
+
+  // ── Extract everything we need from Gal's HTML ──
+  function extractConfig(src) {
+    const cfg = { ...DEFAULTS };
+    cfg.PRIMARY_COLOR = activePalette.primary;
+    cfg.PRIMARY_DARK  = activePalette.primaryDark;
+    cfg.ACCENT_COLOR  = activePalette.accent;
+    cfg.ACCENT_DARK   = activePalette.accentDark;
+    cfg.PRIMARY_RGB   = hexToRgb(activePalette.primary);
+    cfg.ACCENT_RGB    = hexToRgb(activePalette.accent);
+    const doc = new DOMParser().parseFromString(src, 'text/html');
+    const text = doc.body ? doc.body.textContent : src;
+
+    // Title / meta → trip name + age range
+    const title = (doc.querySelector('title')?.textContent || '').trim();
+    const og    = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+    const header = title + ' ' + og + ' ' + text.slice(0, 400);
+    const age = header.match(/(\d{2}-\d{2})/);
+    if (age) { cfg.AGE_RANGE = age[1]; log('age range: ' + age[1], 'ok'); }
+    const trip = header.match(/נחל\s+\S+/);
+    if (trip) { cfg.TRIP_NAME = trip[0]; log('trip name: ' + trip[0], 'ok'); }
+    else log('trip name not found — check it', 'warn');
+
+    // Hero image from og:image or first <img>
+    const ogImg = doc.querySelector('meta[property="og:image"]')?.getAttribute('content');
+    if (ogImg) { cfg.HERO_IMAGE = ogImg; cfg.INFO_IMAGE = ogImg; log('hero image ← og:image', 'ok'); }
+    else {
+      const img = doc.querySelector('img');
+      if (img?.src) { cfg.HERO_IMAGE = img.src; cfg.INFO_IMAGE = img.src; log('hero image ← first <img>', 'ok'); }
+    }
+
+    // Payment links (Green Invoice or ravpage checkout)
+    const linkEls = $$('a[href*="greeninvoice.co.il"],a[href*="sub.ravpage"],a[href*="ravpage.co.il/subscribe"]')
+      .concat(Array.from(doc.querySelectorAll('a[href*="greeninvoice.co.il"],a[href*="sub.ravpage"],a[href*="ravpage.co.il/subscribe"]')));
+    // Use only doc-side results (not the builder page)
+    const links = Array.from(doc.querySelectorAll('a[href*="greeninvoice.co.il"],a[href*="sub.ravpage"],a[href*="ravpage.co.il/subscribe"]'));
+    log('payment links found: ' + links.length, links.length ? 'ok' : 'warn');
+    const slots = { womenSingle: null, womenCouple: null, men: null };
+    links.forEach((a, i) => {
+      const ctx = ((a.textContent || '') + ' ' +
+                   (a.closest('[class]')?.className || '') + ' ' +
+                   (a.closest('section,div,article')?.textContent || '').slice(0, 200));
+      if (/זוגי|couple/i.test(ctx))          slots.womenCouple = slots.womenCouple || a.href;
+      else if (/גבר|גברים|men/i.test(ctx))   slots.men         = slots.men         || a.href;
+      else if (/נשים|אישה|women/i.test(ctx)) slots.womenSingle = slots.womenSingle || a.href;
+      else if (i === 0)                       slots.womenSingle = slots.womenSingle || a.href;
+      else if (i === 1)                       slots.womenCouple = slots.womenCouple || a.href;
+      else if (i === 2)                       slots.men         = slots.men         || a.href;
+    });
+    cfg.TICKET_LINKS_JSON = JSON.stringify(slots, null, 2);
+
+    // Prices — singles < 400, couples >= 400
+    const priceNums = Array.from(text.matchAll(/(\d{2,4})\s*(?:₪|ש["״]?ח)/g))
+      .map(m => parseInt(m[1], 10))
+      .filter(n => n >= 100 && n <= 2000);
+    const uniq = [...new Set(priceNums)].sort((a, b) => a - b);
+    if (uniq.length) log('prices: ' + uniq.join(', '), 'ok');
+    const singles = uniq.filter(n => n < 400);
+    const couples = uniq.filter(n => n >= 400);
+
+    const priceConfig = {};
+    // If we have 2+ singles and a flash date pattern, guess a flash tier
+    // (otherwise skip flashSale — template tolerates missing tiers)
+    if (singles.length >= 1) {
+      priceConfig.tier2 = {
+        until: '',            // user edits output HTML if they want a date
+        single: singles[0] || 289,
+        couple: couples[0] || null,
+        label: 'מדרגת מחיר שנייה',
+        note: ''
+      };
+    }
+    priceConfig.fullPrice = {
+      single: singles[singles.length - 1] || 329,
+      couple: couples[couples.length - 1] || null,
+      label: 'מחיר מלא',
+      note: ''
+    };
+    cfg.PRICE_CONFIG_JSON = JSON.stringify(priceConfig, null, 2);
+
+    // Day of week
+    const day = text.match(/יום\s+(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)/);
+    if (day) cfg.DAY_OF_WEEK = day[0];
+
+    // Full date line "יום <day> D.M"
+    const dateLine = text.match(/יום\s+\S+\s+\d{1,2}\.\d{1,2}/);
+    if (dateLine) cfg.TRIP_DATE = dateLine[0];
+
+    // Times — first + last HH:MM in text
+    const times = Array.from(text.matchAll(/\b([01]?\d|2[0-3]):(\d{2})\b/g)).map(m => m[0]);
+    if (times.length >= 1) cfg.START_TIME = times[0];
+    if (times.length >= 2) cfg.END_TIME   = times[times.length - 1];
+
+    // Distance
+    const dist = text.match(/(?:כ-)?\s?\d[\d\s\-]{0,5}\s?(?:קילומטר(?:ים)?|ק["״]?ם)/);
+    if (dist) cfg.DISTANCE = dist[0].trim();
+
+    return cfg;
+  }
+
+  // ── Render template with config ──
+  async function render(cfg) {
+    const tpl = await fetch('template.html', { cache: 'no-store' }).then(r => {
+      if (!r.ok) throw new Error('template.html: HTTP ' + r.status);
+      return r.text();
+    });
+    const missing = new Set();
+    const out = tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => {
+      if (cfg[k] === undefined || cfg[k] === null || cfg[k] === '') { missing.add(k); return ''; }
+      return cfg[k];
+    });
+    if (missing.size) log('empty tokens: ' + [...missing].join(', '), 'warn');
+    return out;
+  }
+
+  let lastHTML = '';
+
+  async function generate() {
+    logEl.innerHTML = '';
+    const src = $('#src').value.trim();
+    if (!src) { log('Paste some HTML first.', 'warn'); return; }
+    window.__lastSrc = src;
+    const btn = $('#genBtn');
+    btn.disabled = true; btn.textContent = 'Generating…';
+    try {
+      const cfg = extractConfig(src);
+      lastHTML = await render(cfg);
+      $('#preview').srcdoc = lastHTML;
+      $('#dlBtn').disabled = false;
+      $('#cpBtn').disabled = false;
+      log('ready — ' + lastHTML.length + ' bytes (' + activePalette.name + ')', 'ok');
+    } catch (e) {
+      log('failed: ' + e.message, 'err');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generate';
+    }
+  }
+
+  $('#genBtn').addEventListener('click', generate);
+  $('#dlBtn').addEventListener('click', () => {
+    if (!lastHTML) return;
+    const blob = new Blob([lastHTML], { type: 'text/html;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'landing.html';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+  $('#cpBtn').addEventListener('click', async () => {
+    if (!lastHTML) return;
+    try { await navigator.clipboard.writeText(lastHTML); log('copied', 'ok'); }
+    catch (e) { log('copy failed: ' + e.message, 'err'); }
+  });
+
+  // Custom-color picker: derive darker shades by darkening ~20%
+  function darken(hex, pct = 0.22) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.max(0, Math.floor(((n >> 16) & 0xff) * (1 - pct)));
+    const g = Math.max(0, Math.floor(((n >> 8)  & 0xff) * (1 - pct)));
+    const b = Math.max(0, Math.floor((n         & 0xff) * (1 - pct)));
+    return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+  $('#customApply').addEventListener('click', () => {
+    const primary = $('#customPrimary').value;
+    const accent  = $('#customAccent').value;
+    activePalette = {
+      name: 'Custom',
+      primary, primaryDark: darken(primary),
+      accent,  accentDark:  darken(accent),
+    };
+    document.querySelectorAll('#palettes .palette').forEach(n => n.classList.remove('active'));
+    log('custom palette applied', 'ok');
+    if (window.__lastSrc) generate();
+  });
+
+  renderPaletteRow();
+})();
+</script>
+</body>
+</html>
