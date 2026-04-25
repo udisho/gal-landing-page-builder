@@ -231,10 +231,12 @@
     </div>
 
     <details class="texts" id="rotationsPanel">
-      <summary>Image rotations (only if a photo appears sideways)</summary>
+      <summary>Image rotations &amp; exclusions (only if some photos look wrong)</summary>
       <div class="grid">
-        <label class="full"><span class="lbl">One per line: <code dir="ltr">URL=degrees</code> &nbsp;(e.g. <code dir="ltr">https://.../foo.jpg=-90</code>). Negative = counter-clockwise.</span>
-          <textarea id="rotationsList" placeholder="https://images.ravpages.co.il/.../273a0a37c4a18f7d99bfa71a119ea6dc.jpeg=-90"></textarea></label>
+        <label class="full"><span class="lbl">Rotation overrides — one per line: <code dir="ltr">URL=degrees</code></span>
+          <textarea id="rotationsList" placeholder="https://images.ravpages.co.il/.../foo.jpg=-90"></textarea></label>
+        <label class="full"><span class="lbl">Exclude images — one URL per line. These won't appear anywhere on the page.</span>
+          <textarea id="excludeList" placeholder="https://images.ravpages.co.il/.../whatsapp-screenshot.jpg"></textarea></label>
       </div>
     </details>
 
@@ -411,16 +413,21 @@
         womenCouple: ai._links?.womenCouple || null,
         men:         ai._links?.men || null,
       }, null, 2);
-      // Image distribution: ALWAYS prefer the source's own images for hero/info.
+      // Honor the user's excluded-images list before any image gets picked.
+      const excluded = readExcludedUrls();
+      const allImages = (ai._images || []).filter(u => !excluded.has(u));
+      // ALWAYS prefer the source's own images for hero/info.
       // First image → hero. Second image → info (or repeats first if only one).
-      const allImages = ai._images || [];
       if (allImages.length) {
-        cfg.HERO_IMAGE = ai.HERO_IMAGE || allImages[0];
-        cfg.INFO_IMAGE = ai.INFO_IMAGE || allImages[1] || allImages[0];
+        const heroFromAI = !excluded.has(ai.HERO_IMAGE) ? ai.HERO_IMAGE : '';
+        const infoFromAI = !excluded.has(ai.INFO_IMAGE) ? ai.INFO_IMAGE : '';
+        cfg.HERO_IMAGE = heroFromAI || allImages[0];
+        cfg.INFO_IMAGE = infoFromAI || allImages[1] || allImages[0];
       }
-      // Gallery gets every image NOT already used in hero/info — no duplication.
+      // Gallery gets every image NOT already used in hero/info AND not excluded.
       const usedInLayout = new Set([cfg.HERO_IMAGE, cfg.INFO_IMAGE].filter(Boolean));
       const galleryImages = allImages.filter(u => !usedInLayout.has(u));
+      if (excluded.size) log('excluding ' + excluded.size + ' image(s) per your list', 'warn');
       const rotations = readRotations();
       cfg.INCLUDED_CARD_HTML = buildIncludedCardHTML(ai._included || []);
       cfg.REVIEWS_HTML       = buildReviewsHTML(galleryImages, rotations);
@@ -762,7 +769,12 @@
     "9. **תמונות**: hero_image ו-info_image חייבים להיות URL מלא שמתחיל ב-https:// (או http://) ומופיע במפורש בקוד המקור בתוך src של תג <img> או ב-url() של background ב-style.\n" +
     "    **חשוב — אסור להשתמש ב-og:image של ravpage**: ravpage מייצרת אוטומטית תמונה ב-`graphimages.ravpages.live/.../xsite_thumbnails/...` שהיא צילום מסך של הדף עצמו (ולא תמונה אמיתית). אסור להחזיר URL כזה. תעדף `<img src>` של תמונות אמיתיות שגלריה העלתה. אם אין כזו — החזר \"\".\n" +
     "    אסור להמציא URL, אסור לבנות URL מנתיב יחסי, אסור להחזיר data:URI או placeholder. אם אין URL מתאים — החזר \"\" ונשתמש בברירת מחדל.\n" +
-    "10. **images[]** (חשוב): רשימה של *כל* ה-URLים של תמונות שמופיעים בעמוד — מ-`<img src=>`, מ-`og:image`, ומ-`background:url(...)`. רק URLים מלאים שמתחילים ב-https:// (או http://). ללא כפילויות. כלול הכל גם אם נראה לך שזו תמונה דקורטיבית — אנחנו נחליט אחר כך. אם אין תמונות — מערך ריק.\n" +
+    "10. **images[]** (חשוב): רשימה של *כל* ה-URLים של תמונות שמופיעים בעמוד — מ-`<img src=>`, מ-`background:url(...)`, ומקורות חיצוניים. כלול גם URLים שמתחילים ב-`//` (protocol-relative — אלה הם URLים תקפים, נטפל בהמרה ל-https). אסור: data:URIs, נתיבים יחסיים (`/foo.jpg`, `../bar.png`). ללא כפילויות.\n" +
+    "    **חריגים שאסור לכלול ב-images[]**:\n" +
+    "    - og:image של ravpage (URLים שמכילים `xsite_thumbnails` או `graphimages.ravpages.live`) — אלה צילומי מסך אוטומטיים של הדף, לא תמונות אמיתיות.\n" +
+    "    - תמונות שנראות כצילום מסך של שיחה (וואצאפ, SMS, הודעות) — אם יש טקסט בעמוד שמרמז על כך (\"מה אומרים\", \"תגובות\", \"פידבק\", \"חוות דעת\", \"המלצות\", \"reviews\", \"testimonials\") ליד התמונה, או אם alt text מציין שזו תגובה/צילום שיחה — דלג עליה.\n" +
+    "    - לוגואים של אמצעי תשלום (Visa, Mastercard, ביט וכדומה) — דלג.\n" +
+    "    - תמונות סושיאל-מדיה אייקונים (instagram, facebook fonticons) — דלג.\n" +
     "11. **included_items[]** (חשוב!): מערך של פריטים שכלולים בטיול לפי מה שכתוב במפורש בעמוד (למשל: \"הדרכה\", \"ארוחת בוקר\", \"צילום מקצועי\"). חוקים:\n" +
     "    - חובה לצטט מילה במילה את הניסוח שמופיע בעמוד.\n" +
     "    - אסור לכלול פריט שלא מופיע במפורש בעמוד! לדוגמה: אם בעמוד כתוב \"כולל ארוחת בוקר\" אבל לא מצוין שזה כריכים — אסור לכתוב \"ארוחת בוקר: כריכים\". פשוט כתוב \"ארוחת בוקר\".\n" +
@@ -835,15 +847,18 @@
            '</section>';
   }
 
-  // Sanity-check that an AI-supplied URL is a real absolute http(s) URL.
+  // Sanity-check that an AI-supplied URL is real and absolute.
+  // Accepts protocol-relative URLs ("//host/path") by upgrading them to https.
   // Returns null if it looks fishy so we fall back to the default.
   function safeUrl(u) {
     if (!u || typeof u !== 'string') return null;
+    u = u.trim();
+    // Ravpage / many CMSes serve images as protocol-relative — that's valid.
+    if (u.startsWith('//')) u = 'https:' + u;
     if (!/^https?:\/\//i.test(u)) return null;
     if (/^data:|^javascript:|^blob:/i.test(u)) return null;
-    // Ravpage auto-generates a "page thumbnail" image (a screenshot of the page
-    // itself) as og:image. It's served from xsite_thumbnails — never a real
-    // photo. Reject it so we don't use a screenshot of the page as the hero.
+    // Ravpage auto-generates a "page thumbnail" (screenshot of the page itself)
+    // as og:image — never a real photo. Reject it.
     if (/xsite_thumbnails/i.test(u)) return null;
     if (/graphimages\.ravpages\.live/i.test(u)) return null;
     try { new URL(u); } catch { return null; }
@@ -855,10 +870,26 @@
     const raw = (document.getElementById('rotationsList')?.value || '').trim();
     const out = {};
     raw.split('\n').forEach(line => {
-      const m = line.match(/^(https?:\/\/\S+?)\s*=\s*(-?\d+)\s*$/);
-      if (m) out[m[1]] = parseInt(m[2], 10);
+      const m = line.match(/^(https?:\/\/\S+?|\/\/\S+?)\s*=\s*(-?\d+)\s*$/);
+      if (m) {
+        const u = m[1].startsWith('//') ? 'https:' + m[1] : m[1];
+        out[u] = parseInt(m[2], 10);
+      }
     });
     return out;
+  }
+
+  // Parse the excluded-image-URLs textarea into a Set.
+  function readExcludedUrls() {
+    const raw = (document.getElementById('excludeList')?.value || '').trim();
+    const set = new Set();
+    raw.split('\n').forEach(line => {
+      const u = line.trim();
+      if (!u) return;
+      const norm = u.startsWith('//') ? 'https:' + u : u;
+      set.add(norm);
+    });
+    return set;
   }
 
   // Map AI JSON → form fields (texts panel) and prices/links/colors via cfg
@@ -874,6 +905,13 @@
       j.images = [...new Set(j.images.map(u => safeUrl(u)).filter(Boolean))];
     } else { j.images = []; }
     if (!Array.isArray(j.included_items)) j.included_items = [];
+    // Surface what we extracted so the user can copy URLs into the exclusion list
+    if (j.images.length) {
+      log('extracted ' + j.images.length + ' image(s) — see source URLs:', 'ok');
+      j.images.forEach((u, i) => log('  [' + (i + 1) + '] ' + u));
+    } else {
+      log('no images extracted from source', 'warn');
+    }
     const setText = (id, v) => { if (v) document.getElementById(id).value = v; };
     setText('t_PAGE_TITLE',           j.page_title);
     setText('t_PAGE_DESCRIPTION',     j.page_description);
