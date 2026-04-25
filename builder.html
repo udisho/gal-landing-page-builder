@@ -415,18 +415,27 @@
       }, null, 2);
       // Honor the user's excluded-images list before any image gets picked.
       const excluded = readExcludedUrls();
-      const allImages = (ai._images || []).filter(u => !excluded.has(u));
-      // ALWAYS prefer the source's own images for hero/info.
-      // First image → hero. Second image → info (or repeats first if only one).
+      const allImages = dedupeByImageKey(
+        (ai._images || []).filter(u => !excluded.has(u))
+      );
+      // First image → hero. Second image → info. Never repeat the hero into
+      // info — if there's only one image, info falls back to the default
+      // (a different photo) so we don't show the same image twice.
       if (allImages.length) {
         const heroFromAI = !excluded.has(ai.HERO_IMAGE) ? ai.HERO_IMAGE : '';
-        const infoFromAI = !excluded.has(ai.INFO_IMAGE) ? ai.INFO_IMAGE : '';
         cfg.HERO_IMAGE = heroFromAI || allImages[0];
-        cfg.INFO_IMAGE = infoFromAI || allImages[1] || allImages[0];
+        const heroK = imageKey(cfg.HERO_IMAGE);
+        const infoFromAI = (!excluded.has(ai.INFO_IMAGE) && imageKey(ai.INFO_IMAGE) !== heroK)
+          ? ai.INFO_IMAGE : '';
+        const altImage = allImages.find(u => imageKey(u) !== heroK);
+        cfg.INFO_IMAGE = infoFromAI || altImage || DEFAULTS.INFO_IMAGE;
       }
-      // Gallery gets every image NOT already used in hero/info AND not excluded.
-      const usedInLayout = new Set([cfg.HERO_IMAGE, cfg.INFO_IMAGE].filter(Boolean));
-      const galleryImages = allImages.filter(u => !usedInLayout.has(u));
+      // Gallery gets every image NOT already used in hero/info (compared by
+      // canonical key, so size variants don't slip through).
+      const usedKeys = new Set(
+        [cfg.HERO_IMAGE, cfg.INFO_IMAGE].filter(Boolean).map(imageKey)
+      );
+      const galleryImages = allImages.filter(u => !usedKeys.has(imageKey(u)));
       if (excluded.size) log('excluding ' + excluded.size + ' image(s) per your list', 'warn');
       const rotations = readRotations();
       cfg.INCLUDED_CARD_HTML = buildIncludedCardHTML(ai._included || []);
@@ -892,6 +901,28 @@
     return set;
   }
 
+  // Treat ravpage's "foo.jpg" and "foo_703X469.jpg" as the same image, ignore
+  // query strings, normalise host case. Useful for de-duplication across the
+  // many size variants ravpage emits for one source photo.
+  function imageKey(url) {
+    try {
+      const u = new URL(url);
+      const path = u.pathname.replace(/_\d+[xX]\d+(\.[a-z]+)$/i, '$1');
+      return (u.host + path).toLowerCase();
+    } catch { return url; }
+  }
+  function dedupeByImageKey(arr) {
+    const seen = new Set();
+    const out = [];
+    for (const u of arr) {
+      const k = imageKey(u);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(u);
+    }
+    return out;
+  }
+
   // Map AI JSON → form fields (texts panel) and prices/links/colors via cfg
   function applyAIResult(j) {
     // Sanitise URL fields BEFORE they touch the form / extras
@@ -900,9 +931,10 @@
     ['payment_link_women_single','payment_link_women_couple','payment_link_men'].forEach(k => {
       j[k] = safeUrl(j[k]) || '';
     });
-    // Filter the images[] list to only valid absolute http(s) URLs and dedupe.
+    // Filter the images[] list to only valid absolute http(s) URLs and dedupe
+    // by canonical key (so foo.jpg + foo_703X469.jpg merge into one entry).
     if (Array.isArray(j.images)) {
-      j.images = [...new Set(j.images.map(u => safeUrl(u)).filter(Boolean))];
+      j.images = dedupeByImageKey(j.images.map(u => safeUrl(u)).filter(Boolean));
     } else { j.images = []; }
     if (!Array.isArray(j.included_items)) j.included_items = [];
     // Surface what we extracted so the user can copy URLs into the exclusion list
