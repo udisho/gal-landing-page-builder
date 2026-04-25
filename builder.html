@@ -689,13 +689,16 @@
   async function aiExtract(html) {
     const key = localStorage.getItem('geminiKey');
     if (!key) throw new Error('Gemini key not set — open Setup ▾ and paste it');
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(key);
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(key);
     const body = {
       contents: [{ role: 'user', parts: [{ text: AI_PROMPT_PREFIX + html }] }],
       generationConfig: {
         temperature: 0.1,
         responseMimeType: 'application/json',
         responseSchema: AI_SCHEMA,
+        // Disable Gemini 2.5's "thinking" tokens — extraction doesn't need
+        // chain-of-thought, and skipping it makes responses much faster + cheaper.
+        thinkingConfig: { thinkingBudget: 0 },
       }
     };
     const r = await fetch(url, {
