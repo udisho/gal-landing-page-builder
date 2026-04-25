@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>טיול הכרויות {{AGE_RANGE}} | {{TRIP_NAME}} | Gal Travels</title>
-  <meta name="description" content="טיול הכרויות לרווקים ורווקות בגילאי {{AGE_RANGE}} ב{{TRIP_NAME}}. חוויה ייחודית של הכרויות בטבע!">
-  <meta property="og:title" content="טיול הכרויות {{AGE_RANGE}} | {{TRIP_NAME}}">
+  <title>{{PAGE_TITLE}}</title>
+  <meta name="description" content="{{PAGE_DESCRIPTION}}">
+  <meta property="og:title" content="{{PAGE_TITLE}}">
   <meta property="og:image" content="{{HERO_IMAGE}}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1117,9 +1117,9 @@
       <div class="particle"></div>
     </div>
     <div class="hero-content">
-      <div class="hero-badge">Gal Travels | טיולי הכרויות</div>
-      <h1>נמאס לך כבר מטינדר, אוקייקופיד<br>וכל שאר <span class="highlight">האפליקציות?</span></h1>
-      <h2>טיול הכרויות זה בול בשבילך!</h2>
+      <div class="hero-badge">{{HERO_BADGE}}</div>
+      <h1>{{HERO_H1}}</h1>
+      <h2>{{HERO_H2}}</h2>
       <a href="#register" class="hero-cta">
         <span class="arrow">&larr;</span>
         הירשמו היום
@@ -1147,11 +1147,11 @@
   <section class="info">
     <div class="info-container">
       <div class="info-image reveal-right">
-        <img src="{{INFO_IMAGE}}" alt="טיול הכרויות ב{{TRIP_NAME}}" loading="lazy">
+        <img src="{{INFO_IMAGE}}" alt="{{TRIP_NAME}}" loading="lazy">
       </div>
       <div class="info-text reveal-left">
-        <h3>טיולי הכרויות!</h3>
-        <p class="lead">הצטרפו אלינו לטיול הכרויות לרווקים ורווקות בגילאי {{AGE_RANGE}}, המשלב חוויות של הכרות, טיול מרגיע &ndash; כל זאת באווירה נינוחה וטבעית.</p>
+        <h3>{{INFO_HEADLINE}}</h3>
+        <p class="lead">{{INFO_LEAD}}</p>
 
         <div class="detail-card">
           <h4><span class="icon">&#128197;</span> תאריכים ושעות</h4>
@@ -1222,19 +1222,19 @@
   <section class="registration" id="register">
     <div class="registration-bg"></div>
     <div class="registration-content">
-      <h2>נפתחה הרשמה לטיול הקרוב!<br>מהרו לתפוס מקום</h2>
+      <h2>{{REGISTRATION_HEADLINE}}</h2>
       <div class="age-badge">גילאי {{AGE_RANGE}}</div>
 
       <!-- Tabs (builder hides the tab whose ticket link is empty) -->
       <div class="form-tabs">
-        <button class="form-tab active" data-target="form-women-single" data-ticket="womenSingle">כרטיס לנשים</button>
-        <button class="form-tab"        data-target="form-women-couple" data-ticket="womenCouple">כרטיס זוגי לנשים</button>
-        <button class="form-tab"        data-target="form-men"          data-ticket="men">כרטיס לגברים</button>
+        <button class="form-tab active" data-target="form-women-single" data-ticket="womenSingle">{{TICKET_WS_LABEL}}</button>
+        <button class="form-tab"        data-target="form-women-couple" data-ticket="womenCouple">{{TICKET_WC_LABEL}}</button>
+        <button class="form-tab"        data-target="form-men"          data-ticket="men">{{TICKET_M_LABEL}}</button>
       </div>
 
       <!-- Women single -->
       <div class="form-card active" id="form-women-single" data-ticket="womenSingle">
-        <div class="form-title">כרטיס לנשים</div>
+        <div class="form-title">{{TICKET_WS_LABEL}}</div>
         <div class="form-price" data-price-kind="single">—</div>
         <label class="policy-check">
           <input type="checkbox" class="agree" required>
@@ -1249,7 +1249,7 @@
 
       <!-- Women couple -->
       <div class="form-card" id="form-women-couple" data-ticket="womenCouple">
-        <div class="form-title">כרטיס זוגי לנשים</div>
+        <div class="form-title">{{TICKET_WC_LABEL}}</div>
         <div class="form-price" data-price-kind="couple">—</div>
         <label class="policy-check">
           <input type="checkbox" class="agree" required>
@@ -1264,7 +1264,7 @@
 
       <!-- Men -->
       <div class="form-card" id="form-men" data-ticket="men">
-        <div class="form-title">כרטיס לגברים</div>
+        <div class="form-title">{{TICKET_M_LABEL}}</div>
         <div class="form-price" data-price-kind="single">—</div>
         <label class="policy-check">
           <input type="checkbox" class="agree" required>

@@ -65,6 +65,48 @@
       background: #fff;
       margin-top: 12px;
     }
+    details.texts {
+      margin: 10px 0;
+      border: 1px solid #d8d8e0;
+      border-radius: 8px;
+      background: #fafaff;
+    }
+    details.texts > summary {
+      cursor: pointer;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: #444;
+      list-style: none;
+      user-select: none;
+      font-size: 0.95rem;
+    }
+    details.texts > summary::after {
+      content: '▾'; float: left; color: #888;
+    }
+    details.texts[open] > summary::after { content: '▴'; }
+    details.texts .grid {
+      padding: 4px 14px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 14px;
+    }
+    @media (max-width: 700px) { details.texts .grid { grid-template-columns: 1fr; } }
+    details.texts label {
+      display: block;
+      font-size: 0.78rem;
+      color: #555;
+    }
+    details.texts label span.lbl { display: block; margin-bottom: 3px; color: #555; }
+    details.texts input, details.texts textarea {
+      width: 100%;
+      padding: 7px 9px;
+      border: 1px solid #ccd;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    details.texts textarea { min-height: 60px; resize: vertical; }
+    .full { grid-column: 1 / -1; }
     .palette-row {
       display: flex;
       gap: 10px;
@@ -130,6 +172,34 @@
       </div>
     </div>
 
+    <details class="texts" open id="textsPanel">
+      <summary>Page texts (auto-filled from source — edit if any look wrong)</summary>
+      <div class="grid">
+        <label class="full"><span class="lbl">Page title (browser tab)</span>
+          <input id="t_PAGE_TITLE"></label>
+        <label class="full"><span class="lbl">Hero headline (h1)</span>
+          <textarea id="t_HERO_H1"></textarea></label>
+        <label class="full"><span class="lbl">Hero sub-headline (h2)</span>
+          <input id="t_HERO_H2"></label>
+        <label><span class="lbl">Hero badge (small pill)</span>
+          <input id="t_HERO_BADGE"></label>
+        <label><span class="lbl">Registration headline</span>
+          <input id="t_REGISTRATION_HEADLINE"></label>
+        <label><span class="lbl">Info section headline</span>
+          <input id="t_INFO_HEADLINE"></label>
+        <label class="full"><span class="lbl">Info lead paragraph</span>
+          <textarea id="t_INFO_LEAD"></textarea></label>
+        <label><span class="lbl">Ticket label — single (women)</span>
+          <input id="t_TICKET_WS_LABEL"></label>
+        <label><span class="lbl">Ticket label — couple</span>
+          <input id="t_TICKET_WC_LABEL"></label>
+        <label><span class="lbl">Ticket label — third (men)</span>
+          <input id="t_TICKET_M_LABEL"></label>
+        <label class="full"><span class="lbl">Page meta description</span>
+          <input id="t_PAGE_DESCRIPTION"></label>
+      </div>
+    </details>
+
     <div class="actions">
       <button class="primary"   id="genBtn">Generate</button>
       <button class="secondary" id="dlBtn"  disabled>Download .html</button>
@@ -184,7 +254,7 @@
     });
   }
 
-  // ── Defaults used when extraction can't find a value ──
+  // ── Defaults used when extraction can't find a value (kept generic, not dating-specific) ──
   const DEFAULTS = {
     TRIP_NAME:   'נחל',
     AGE_RANGE:   '25-35',
@@ -195,12 +265,48 @@
     DISTANCE:    'כ-3 קילומטרים',
     HERO_IMAGE:  'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/19aee3702e9ac6ce5eaeaad05fb4f948.jpeg?maxWidth=1400',
     INFO_IMAGE:  'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/c923808c4808f26f60b5244ff2476ca6_450X441.jpeg?ver=3.12',
+    // Editable text — extraction will fill these from the source page; otherwise:
+    PAGE_TITLE:           'טיול | Gal Travels',
+    PAGE_DESCRIPTION:     'הצטרפו לטיול עם Gal Travels.',
+    HERO_BADGE:           'Gal Travels',
+    HERO_H1:              'הטיול הבא שלכם מחכה',
+    HERO_H2:              'מקומות מוגבלים — הירשמו עוד היום',
+    INFO_HEADLINE:        'אז מה הולך להיות?',
+    INFO_LEAD:            'הצטרפו אלינו לטיול בגילאי {{AGE_RANGE}} — באווירה נינוחה וטבעית.',
+    REGISTRATION_HEADLINE:'נפתחה הרשמה לטיול הקרוב!<br>מהרו לתפוס מקום',
+    TICKET_WS_LABEL:      'כרטיס יחיד',
+    TICKET_WC_LABEL:      'כרטיס זוגי',
+    TICKET_M_LABEL:       'כרטיס נוסף',
   };
 
   // Hex (#rrggbb) → "r,g,b" string for rgba() interpolation
   function hexToRgb(hex) {
     const n = parseInt(hex.replace('#', ''), 16);
     return ((n >> 16) & 0xff) + ',' + ((n >> 8) & 0xff) + ',' + (n & 0xff);
+  }
+
+  // List of editable text token IDs (must match `t_XXX` inputs and template tokens)
+  const TEXT_TOKENS = [
+    'PAGE_TITLE','PAGE_DESCRIPTION','HERO_BADGE','HERO_H1','HERO_H2',
+    'INFO_HEADLINE','INFO_LEAD','REGISTRATION_HEADLINE',
+    'TICKET_WS_LABEL','TICKET_WC_LABEL','TICKET_M_LABEL',
+  ];
+
+  // Read user-edited values from the texts panel (overrides extracted values)
+  function readTextOverrides(cfg) {
+    TEXT_TOKENS.forEach(k => {
+      const el = document.getElementById('t_' + k);
+      if (el && el.value.trim()) cfg[k] = el.value;
+    });
+    return cfg;
+  }
+
+  // Push extracted texts into the panel inputs so user can review/edit
+  function fillTextsPanel(cfg) {
+    TEXT_TOKENS.forEach(k => {
+      const el = document.getElementById('t_' + k);
+      if (el) el.value = cfg[k] || '';
+    });
   }
 
   // ── Extract everything we need from Gal's HTML ──
@@ -214,6 +320,40 @@
     cfg.ACCENT_RGB    = hexToRgb(activePalette.accent);
     const doc = new DOMParser().parseFromString(src, 'text/html');
     const text = doc.body ? doc.body.textContent : src;
+
+    // Helper: pick the first non-empty textContent from a list of selectors
+    const pickText = sel => {
+      for (const el of doc.querySelectorAll(sel)) {
+        const v = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (v) return v;
+      }
+      return '';
+    };
+    // Page title from <title> or og:title
+    const pageTitle = pickText('title') || (doc.querySelector('meta[property="og:title"]')?.content || '');
+    if (pageTitle) cfg.PAGE_TITLE = pageTitle;
+    const desc = doc.querySelector('meta[name="description"]')?.content || '';
+    if (desc) cfg.PAGE_DESCRIPTION = desc;
+    // Hero h1 / h2 from prominent headings
+    const h1 = pickText('h1');           if (h1) cfg.HERO_H1 = h1;
+    const h2s = $$('h2', doc).map(el => (el.textContent || '').trim()).filter(Boolean);
+    if (h2s[0]) cfg.HERO_H2 = h2s[0];
+    if (h2s[1]) cfg.REGISTRATION_HEADLINE = h2s[1];
+    // Info headline & lead — first h3 + nearest paragraph in same section
+    const h3 = doc.querySelector('h3');
+    if (h3) cfg.INFO_HEADLINE = (h3.textContent || '').trim();
+    const lead = doc.querySelector('h3 ~ p, h2 ~ p, .lead, p.lead');
+    if (lead) {
+      const t = (lead.textContent || '').replace(/\s+/g, ' ').trim();
+      if (t) cfg.INFO_LEAD = t;
+    }
+    // Ticket labels — buttons or links containing "כרטיס" or "tab"
+    const ticketCandidates = $$('button, a', doc)
+      .map(el => (el.textContent || '').trim())
+      .filter(t => /כרטיס/.test(t) && t.length < 60);
+    if (ticketCandidates[0]) cfg.TICKET_WS_LABEL = ticketCandidates[0];
+    if (ticketCandidates[1]) cfg.TICKET_WC_LABEL = ticketCandidates[1];
+    if (ticketCandidates[2]) cfg.TICKET_M_LABEL  = ticketCandidates[2];
 
     // Title / meta → trip name + age range
     const title = (doc.querySelector('title')?.textContent || '').trim();
@@ -323,11 +463,17 @@
     logEl.innerHTML = '';
     const src = $('#src').value.trim();
     if (!src) { log('Paste some HTML first.', 'warn'); return; }
+    const isFreshSource = src !== window.__lastSrc;
     window.__lastSrc = src;
     const btn = $('#genBtn');
     btn.disabled = true; btn.textContent = 'Generating…';
     try {
       const cfg = extractConfig(src);
+      // First time we see this source → fill the texts panel from extraction.
+      // Subsequent generations (palette changes, manual edits) keep panel values.
+      if (isFreshSource) fillTextsPanel(cfg);
+      // Always apply manual text overrides last (so user edits win)
+      readTextOverrides(cfg);
       lastHTML = await render(cfg);
       $('#preview').srcdoc = lastHTML;
       $('#dlBtn').disabled = false;
