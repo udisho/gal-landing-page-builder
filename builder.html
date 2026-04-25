@@ -403,9 +403,19 @@
         womenCouple: ai._links?.womenCouple || null,
         men:         ai._links?.men || null,
       }, null, 2);
+      // Render dynamic HTML blocks from AI arrays
+      cfg.INCLUDED_CARD_HTML = buildIncludedCardHTML(ai._included || []);
+      cfg.REVIEWS_HTML       = buildReviewsHTML(ai._images || []);
+      // If AI didn't return any images of its own, leave hero/info as defaults;
+      // but if it did and hero_image was empty, take the first AI image.
+      if (!ai.HERO_IMAGE && ai._images && ai._images.length) cfg.HERO_IMAGE = ai._images[0];
+      if (!ai.INFO_IMAGE && ai._images && ai._images.length) cfg.INFO_IMAGE = ai._images[1] || ai._images[0];
       // AI handled everything; skip the regex fallback to avoid overwrites
       return cfg;
     }
+    // No AI: keep the legacy template's hardcoded card / gallery for now
+    cfg.INCLUDED_CARD_HTML = '';
+    cfg.REVIEWS_HTML       = '';
 
     const doc = new DOMParser().parseFromString(src, 'text/html');
     const text = doc.body ? doc.body.textContent : src;
@@ -673,6 +683,11 @@
       payment_link_women_single: { type: 'string' },
       payment_link_women_couple: { type: 'string' },
       payment_link_men:    { type: 'string' },
+      // Bullet items literally listed on the source page (e.g. "ארוחת בוקר",
+      // "צילום מקצועי"). Empty array if the page doesn't list any.
+      included_items:      { type: 'array', items: { type: 'string' } },
+      // ALL absolute https image URLs that appear on the page.
+      images:              { type: 'array', items: { type: 'string' } },
     }
   };
 
@@ -688,7 +703,13 @@
     "6. **לקישורי תשלום**: רק קישורים ל-greeninvoice.co.il או checkout של ravpage. שייך לסוג הכרטיס לפי טקסט סמוך (\"לנשים\" / \"זוגי\" / \"גברים\"). אם אין קישור — החזר \"\".\n" +
     "7. **תאריכים**: אם רואה תאריך מלא — החזר YYYY-MM-DD. אם רק תאריך עברי כמו \"2.5\" — שים אותו ב-trip_date כמחרוזת.\n" +
     "8. **מחירים**: רק מספרים שהופיעו ליד \"₪\" או \"ש\\\"ח\" באופן ברור. אסור לחשב או להשלים.\n" +
-    "9. **תמונות**: hero_image ו-info_image חייבים להיות URL מלא שמתחיל ב-https:// (או http://) ומופיע במפורש בקוד המקור — בתוך src של תג <img>, ב-content של meta[property=og:image], או ב-url() של background ב-style. אסור להמציא URL, אסור לבנות URL מנתיב יחסי, אסור להחזיר data:URI או placeholder. אם אין URL מתאים — החזר \"\" ונשתמש בברירת מחדל.\n\n" +
+    "9. **תמונות**: hero_image ו-info_image חייבים להיות URL מלא שמתחיל ב-https:// (או http://) ומופיע במפורש בקוד המקור — בתוך src של תג <img>, ב-content של meta[property=og:image], או ב-url() של background ב-style. אסור להמציא URL, אסור לבנות URL מנתיב יחסי, אסור להחזיר data:URI או placeholder. אם אין URL מתאים — החזר \"\" ונשתמש בברירת מחדל.\n" +
+    "10. **images[]** (חשוב): רשימה של *כל* ה-URLים של תמונות שמופיעים בעמוד — מ-`<img src=>`, מ-`og:image`, ומ-`background:url(...)`. רק URLים מלאים שמתחילים ב-https:// (או http://). ללא כפילויות. כלול הכל גם אם נראה לך שזו תמונה דקורטיבית — אנחנו נחליט אחר כך. אם אין תמונות — מערך ריק.\n" +
+    "11. **included_items[]** (חשוב!): מערך של פריטים שכלולים בטיול לפי מה שכתוב במפורש בעמוד (למשל: \"הדרכה\", \"ארוחת בוקר\", \"צילום מקצועי\"). חוקים:\n" +
+    "    - חובה לצטט מילה במילה את הניסוח שמופיע בעמוד.\n" +
+    "    - אסור לכלול פריט שלא מופיע במפורש בעמוד! לדוגמה: אם בעמוד כתוב \"כולל ארוחת בוקר\" אבל לא מצוין שזה כריכים — אסור לכתוב \"ארוחת בוקר: כריכים\". פשוט כתוב \"ארוחת בוקר\".\n" +
+    "    - אם העמוד לא מציין שום פריטים שכלולים — החזר מערך ריק [].\n" +
+    "    - אסור להוסיף פירושים, פרטים גנריים, או הנחות (כמו \"כריכים\", \"קפה ותה\") שלא הופיעו במקור.\n\n" +
     "דוגמה — אם בעמוד כתוב \"טיול נשים בעמק המעיינות\":\n" +
     "  - hero_h1 = \"טיול נשים בעמק המעיינות\" (לא \"טיול הכרויות בעמק המעיינות\", לא \"הצטרפו לטיול\").\n" +
     "  - אם לא כתוב מה כלול בארוחת בוקר — info_lead לא יזכיר \"כריכים\" או כל פרט אחר שלא נמצא בטקסט.\n\n" +
@@ -722,6 +743,35 @@
     return JSON.parse(txt);
   }
 
+  // Tiny HTML escaper for text values pulled from AI before injecting into template.
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Build "what's included" detail-card HTML (or empty string if no items).
+  function buildIncludedCardHTML(items) {
+    if (!items || !items.length) return '';
+    const lis = items.map(i => '<li>' + esc(i) + '</li>').join('');
+    return '<div class="detail-card">' +
+           '<h4><span class="icon">&#127956;</span> מה כלול בטיול?</h4>' +
+           '<ul>' + lis + '</ul>' +
+           '</div>';
+  }
+
+  // Build the gallery section HTML (or empty string if no images).
+  function buildReviewsHTML(images) {
+    if (!images || !images.length) return '';
+    const items = images.map(u => '<div class="gallery-item reveal"><img src="' + esc(u) + '" alt="תמונה מהטיול" loading="lazy"></div>').join('');
+    return '<section class="gallery">' +
+           '<div class="gallery-container">' +
+             '<h3 class="reveal">תמונות מהטיול</h3>' +
+             '<div class="gallery-grid">' + items + '</div>' +
+           '</div>' +
+           '</section>';
+  }
+
   // Sanity-check that an AI-supplied URL is a real absolute http(s) URL.
   // Returns null if it looks fishy so we fall back to the default.
   function safeUrl(u) {
@@ -740,6 +790,11 @@
     ['payment_link_women_single','payment_link_women_couple','payment_link_men'].forEach(k => {
       j[k] = safeUrl(j[k]) || '';
     });
+    // Filter the images[] list to only valid absolute http(s) URLs and dedupe.
+    if (Array.isArray(j.images)) {
+      j.images = [...new Set(j.images.map(u => safeUrl(u)).filter(Boolean))];
+    } else { j.images = []; }
+    if (!Array.isArray(j.included_items)) j.included_items = [];
     const setText = (id, v) => { if (v) document.getElementById(id).value = v; };
     setText('t_PAGE_TITLE',           j.page_title);
     setText('t_PAGE_DESCRIPTION',     j.page_description);
@@ -770,7 +825,9 @@
         womenSingle: j.payment_link_women_single,
         womenCouple: j.payment_link_women_couple,
         men:         j.payment_link_men,
-      }
+      },
+      _images: j.images,
+      _included: j.included_items,
     };
   }
 

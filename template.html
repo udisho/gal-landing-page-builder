@@ -1162,16 +1162,7 @@
           </ul>
         </div>
 
-        <div class="detail-card">
-          <h4><span class="icon">&#127956;</span> מה מחכה לכם/ן בטיול?</h4>
-          <ul>
-            <li><strong>טיול טבע ייחודי</strong> &ndash; {{DAY_OF_WEEK}} בבוקר, טיול רגלי ב{{TRIP_NAME}}</li>
-            <li><strong>רמת קושי: קל</strong> &ndash; מרחק: {{DISTANCE}}</li>
-            <li>ההגעה באופן עצמאי, ישלח טופס טרמפים מסודר לנרשמים/ות</li>
-            <li><strong>ארוחת בוקר:</strong> כריכים עם תוספות שונות, ירקות ופינת קפה/תה</li>
-            <li><strong>צילום מקצועי</strong> ותמונות ערוכות</li>
-          </ul>
-        </div>
+        {{INCLUDED_CARD_HTML}}
       </div>
     </div>
   </section>
@@ -1302,26 +1293,8 @@
     </div>
   </section>
 
-  <!-- ═══ Reviews (WhatsApp chat screenshots from past participants) ═══ -->
-  <section class="gallery">
-    <div class="gallery-container">
-      <h3 class="reveal">מה אומרים המשתתפים שלנו?</h3>
-      <div class="gallery-grid">
-        <div class="gallery-item reveal">
-          <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/5c139ed5910a452a8230095a51005dbe_184X109.png?ver=3.12" alt="תגובה ממשתתף/ת" loading="lazy">
-        </div>
-        <div class="gallery-item reveal">
-          <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/c2f453856cf123a67e3a04fb18289b73_184X92.jpeg?ver=3.12" alt="תגובה ממשתתף/ת" loading="lazy">
-        </div>
-        <div class="gallery-item reveal">
-          <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/59318360b73c94dbd969c5fbc72de496_184X177.jpeg?ver=3.12" alt="תגובה ממשתתף/ת" loading="lazy">
-        </div>
-        <div class="gallery-item reveal">
-          <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/601c60b5bbb4d552daf6067de1e48b65_184X285.jpeg?ver=3.12" alt="תגובה ממשתתף/ת" loading="lazy">
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- ═══ Reviews / image gallery (filled from source) ═══ -->
+  {{REVIEWS_HTML}}
 
   <!-- ═══ Footer ═══ -->
   <footer>
