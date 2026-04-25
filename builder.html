@@ -230,6 +230,14 @@
       </div>
     </div>
 
+    <details class="texts" id="rotationsPanel">
+      <summary>Image rotations (only if a photo appears sideways)</summary>
+      <div class="grid">
+        <label class="full"><span class="lbl">One per line: <code dir="ltr">URL=degrees</code> &nbsp;(e.g. <code dir="ltr">https://.../foo.jpg=-90</code>). Negative = counter-clockwise.</span>
+          <textarea id="rotationsList" placeholder="https://images.ravpages.co.il/.../273a0a37c4a18f7d99bfa71a119ea6dc.jpeg=-90"></textarea></label>
+      </div>
+    </details>
+
     <details class="texts" open id="textsPanel">
       <summary>Page texts (auto-filled from source — edit if any look wrong)</summary>
       <div class="grid">
@@ -413,14 +421,26 @@
       // Gallery gets every image NOT already used in hero/info — no duplication.
       const usedInLayout = new Set([cfg.HERO_IMAGE, cfg.INFO_IMAGE].filter(Boolean));
       const galleryImages = allImages.filter(u => !usedInLayout.has(u));
+      const rotations = readRotations();
       cfg.INCLUDED_CARD_HTML = buildIncludedCardHTML(ai._included || []);
-      cfg.REVIEWS_HTML       = buildReviewsHTML(galleryImages);
+      cfg.REVIEWS_HTML       = buildReviewsHTML(galleryImages, rotations);
+      // If the chosen hero image has a rotation override, inject CSS so the
+      // hero background renders rotated. Same for info-image.
+      let extraCSS = '';
+      if (cfg.HERO_IMAGE && rotations[cfg.HERO_IMAGE]) {
+        extraCSS += '.hero-bg{transform:rotate(' + rotations[cfg.HERO_IMAGE] + 'deg);transform-origin:center;}';
+      }
+      if (cfg.INFO_IMAGE && rotations[cfg.INFO_IMAGE]) {
+        extraCSS += '.info-image img{transform:rotate(' + rotations[cfg.INFO_IMAGE] + 'deg);}';
+      }
+      cfg.EXTRA_CSS = extraCSS ? '<style>' + extraCSS + '</style>' : '';
       // AI handled everything; skip the regex fallback to avoid overwrites
       return cfg;
     }
     // No AI: keep the legacy template's hardcoded card / gallery for now
     cfg.INCLUDED_CARD_HTML = '';
     cfg.REVIEWS_HTML       = '';
+    cfg.EXTRA_CSS          = '';
 
     const doc = new DOMParser().parseFromString(src, 'text/html');
     const text = doc.body ? doc.body.textContent : src;
@@ -707,8 +727,41 @@
     "5. **לא משפרים**: אסור לעבד את הטקסט שיהיה \"יפה יותר\" או \"מקצועי יותר\". העתקה גרידא.\n" +
     "6. **לקישורי תשלום**: רק קישורים ל-greeninvoice.co.il או checkout של ravpage. שייך לסוג הכרטיס לפי טקסט סמוך (\"לנשים\" / \"זוגי\" / \"גברים\"). אם אין קישור — החזר \"\".\n" +
     "7. **תאריכים**: אם רואה תאריך מלא — החזר YYYY-MM-DD. אם רק תאריך עברי כמו \"2.5\" — שים אותו ב-trip_date כמחרוזת.\n" +
-    "8. **מחירים**: רק מספרים שהופיעו ליד \"₪\" או \"ש\\\"ח\" באופן ברור. אסור לחשב או להשלים.\n" +
-    "9. **תמונות**: hero_image ו-info_image חייבים להיות URL מלא שמתחיל ב-https:// (או http://) ומופיע במפורש בקוד המקור — בתוך src של תג <img>, ב-content של meta[property=og:image], או ב-url() של background ב-style. אסור להמציא URL, אסור לבנות URL מנתיב יחסי, אסור להחזיר data:URI או placeholder. אם אין URL מתאים — החזר \"\" ונשתמש בברירת מחדל.\n" +
+    "8. **מחירים** — חוקים מדויקים, חובה לעקוב:\n" +
+    "   חלץ רק מספרים שמופיעים ליד \"₪\" או \"ש\\\"ח\" בעמוד. שייך אותם כך:\n" +
+    "\n" +
+    "   - **flash_*** = מחיר מבצע שתקף עד תאריך מסוים. סימני זיהוי: \"עד ה-X\", \"ל-24 שעות בלבד\", \"במבצע\", \"מבצע השקה\".\n" +
+    "     • flash_single = הסכום של המבצע ליחיד (מספר בלבד)\n" +
+    "     • flash_until = התאריך שהמבצע נגמר (YYYY-MM-DD). אם בעמוד כתוב \"עד 26.4\" והשנה הנוכחית 2026 — flash_until=\"2026-04-26\"\n" +
+    "     • flash_label = הניסוח שמופיע בעמוד למבצע (למשל \"מחיר ל-24 שעות בלבד\"). אם אין ניסוח מיוחד — \"מחיר מבצע\".\n" +
+    "     • אם אין מבצע מוגבל בזמן בעמוד — flash_single=0 ו-flash_until=\"\"\n" +
+    "\n" +
+    "   - **full_*** = המחיר הקבוע (לא מוגבל בזמן). סימני זיהוי: \"מחיר מלא\", \"החל מ-X\", \"מחיר רגיל\".\n" +
+    "     • full_single = מחיר יחיד מלא (מספר בלבד)\n" +
+    "     • full_couple = מחיר זוגי מלא — רק אם כתוב במפורש מחיר זוגי בעמוד. אחרת 0.\n" +
+    "\n" +
+    "   - **tier2_*** = רק אם בעמוד יש שלוש מדרגות מחיר נפרדות (early bird → tier2 → full). אם יש רק שתי מדרגות (flash → full) או רק מחיר אחד — השאר ריק: tier2_single=0, tier2_until=\"\", tier2_couple=0, tier2_label=\"\"\n" +
+    "\n" +
+    "   - **דוגמה 1 (שתי מדרגות, מבצע + מלא)**: בעמוד כתוב:\n" +
+    "       \"180₪ למשתתפ/ת ל-24 שעות בלבד!! עד ה-26.4 (כולל)\n" +
+    "        מחיר יחיד מלא 199 ש\\\"ח החל מה-27.4\n" +
+    "        מחיר זוגי 380 ש\\\"ח החל מה-27.4\"\n" +
+    "     התשובה הנכונה:\n" +
+    "       flash_single=180, flash_until=\"2026-04-26\", flash_label=\"מחיר ל-24 שעות בלבד\"\n" +
+    "       full_single=199, full_couple=380\n" +
+    "       tier2_single=0, tier2_until=\"\", tier2_couple=0, tier2_label=\"\"\n" +
+    "\n" +
+    "   - **דוגמה 2 (מחיר אחד בלבד)**: בעמוד כתוב רק:\n" +
+    "       \"עלות הטיול היא 180 ש\\\"ח\"\n" +
+    "     התשובה הנכונה (כל מדרגה אחרת ריקה):\n" +
+    "       flash_single=0, flash_until=\"\", flash_label=\"\"\n" +
+    "       tier2_single=0, tier2_until=\"\", tier2_couple=0, tier2_label=\"\"\n" +
+    "       full_single=180, full_couple=0\n" +
+    "\n" +
+    "   אסור לסכם, לחשב, להעריך או \"להשלים\" מחירים. אם משהו לא ברור — השאר 0. אסור לכפול מחיר אחד לכמה מדרגות.\n" +
+    "9. **תמונות**: hero_image ו-info_image חייבים להיות URL מלא שמתחיל ב-https:// (או http://) ומופיע במפורש בקוד המקור בתוך src של תג <img> או ב-url() של background ב-style.\n" +
+    "    **חשוב — אסור להשתמש ב-og:image של ravpage**: ravpage מייצרת אוטומטית תמונה ב-`graphimages.ravpages.live/.../xsite_thumbnails/...` שהיא צילום מסך של הדף עצמו (ולא תמונה אמיתית). אסור להחזיר URL כזה. תעדף `<img src>` של תמונות אמיתיות שגלריה העלתה. אם אין כזו — החזר \"\".\n" +
+    "    אסור להמציא URL, אסור לבנות URL מנתיב יחסי, אסור להחזיר data:URI או placeholder. אם אין URL מתאים — החזר \"\" ונשתמש בברירת מחדל.\n" +
     "10. **images[]** (חשוב): רשימה של *כל* ה-URLים של תמונות שמופיעים בעמוד — מ-`<img src=>`, מ-`og:image`, ומ-`background:url(...)`. רק URLים מלאים שמתחילים ב-https:// (או http://). ללא כפילויות. כלול הכל גם אם נראה לך שזו תמונה דקורטיבית — אנחנו נחליט אחר כך. אם אין תמונות — מערך ריק.\n" +
     "11. **included_items[]** (חשוב!): מערך של פריטים שכלולים בטיול לפי מה שכתוב במפורש בעמוד (למשל: \"הדרכה\", \"ארוחת בוקר\", \"צילום מקצועי\"). חוקים:\n" +
     "    - חובה לצטט מילה במילה את הניסוח שמופיע בעמוד.\n" +
@@ -766,9 +819,14 @@
   }
 
   // Build the gallery section HTML (or empty string if no images).
-  function buildReviewsHTML(images) {
+  // `rotations` is a {url: degrees} map; matching images get a CSS rotation.
+  function buildReviewsHTML(images, rotations = {}) {
     if (!images || !images.length) return '';
-    const items = images.map(u => '<div class="gallery-item reveal"><img src="' + esc(u) + '" alt="תמונה מהטיול" loading="lazy"></div>').join('');
+    const items = images.map(u => {
+      const deg = rotations[u];
+      const styleAttr = deg ? ' style="transform: rotate(' + deg + 'deg);"' : '';
+      return '<div class="gallery-item reveal"><img src="' + esc(u) + '" alt="תמונה מהטיול" loading="lazy"' + styleAttr + '></div>';
+    }).join('');
     return '<section class="gallery">' +
            '<div class="gallery-container">' +
              '<h3 class="reveal">תמונות מהטיול</h3>' +
@@ -783,8 +841,24 @@
     if (!u || typeof u !== 'string') return null;
     if (!/^https?:\/\//i.test(u)) return null;
     if (/^data:|^javascript:|^blob:/i.test(u)) return null;
+    // Ravpage auto-generates a "page thumbnail" image (a screenshot of the page
+    // itself) as og:image. It's served from xsite_thumbnails — never a real
+    // photo. Reject it so we don't use a screenshot of the page as the hero.
+    if (/xsite_thumbnails/i.test(u)) return null;
+    if (/graphimages\.ravpages\.live/i.test(u)) return null;
     try { new URL(u); } catch { return null; }
     return u;
+  }
+
+  // Parse the rotation overrides textarea into { url: degrees } map.
+  function readRotations() {
+    const raw = (document.getElementById('rotationsList')?.value || '').trim();
+    const out = {};
+    raw.split('\n').forEach(line => {
+      const m = line.match(/^(https?:\/\/\S+?)\s*=\s*(-?\d+)\s*$/);
+      if (m) out[m[1]] = parseInt(m[2], 10);
+    });
+    return out;
   }
 
   // Map AI JSON → form fields (texts panel) and prices/links/colors via cfg
