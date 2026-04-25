@@ -107,6 +107,50 @@
     }
     details.texts textarea { min-height: 60px; resize: vertical; }
     .full { grid-column: 1 / -1; }
+
+    /* ── Setup card (bookmarklet + Gemini key) ── */
+    .setup {
+      background: #fff8e6;
+      border: 1px solid #f0c27f;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .setup h2 { font-size: 1rem; margin-bottom: 6px; color: #5a3e10; }
+    .setup p  { font-size: 0.82rem; color: #5a3e10; margin: 4px 0; }
+    .bookmarklet {
+      display: inline-block;
+      background: #513f83;
+      color: #fff !important;
+      padding: 8px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin: 6px 0;
+      cursor: grab;
+    }
+    .bookmarklet:hover { background: #3e2f6b; }
+    .setup .row {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      margin-top: 6px;
+    }
+    .setup input[type="password"], .setup input[type="text"] {
+      flex: 1;
+      min-width: 220px;
+      padding: 7px 10px;
+      border: 1px solid #ccd;
+      border-radius: 5px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      direction: ltr;
+    }
+    .setup .key-state {
+      font-size: 0.78rem;
+      color: #2a7;
+      font-weight: 700;
+    }
+    .setup .key-state.missing { color: #c33; }
     .palette-row {
       display: flex;
       gap: 10px;
@@ -158,7 +202,21 @@
 <body>
   <div class="wrap">
     <h1>Gal Travels — Builder</h1>
-    <p class="sub">Paste the HTML of Gal's existing landing page. Click Generate.</p>
+    <p class="sub">Click the bookmarklet on a ravpage page (or paste HTML below), let AI extract the data, then Generate.</p>
+
+    <details class="setup" id="setupBox">
+      <summary><strong>Setup &amp; settings ▾</strong> &nbsp;<span class="key-state" id="keyState">no key</span></summary>
+      <h2>1. Drag this to your bookmarks bar (one-time):</h2>
+      <a id="bookmarkletLink" class="bookmarklet" href="#">📥 שלח לבילדר</a>
+      <p>Then while viewing a ravpage landing page, click the bookmark — its HTML will land here automatically.</p>
+      <h2>2. Gemini API key (so AI auto-fill works):</h2>
+      <div class="row">
+        <input type="password" id="apiKey" placeholder="AIza...">
+        <button class="secondary" id="saveKeyBtn">Save</button>
+        <button class="secondary" id="clearKeyBtn">Clear</button>
+      </div>
+      <p>Stored in your browser only (localStorage). Each browser/device needs to be set up once.</p>
+    </details>
 
     <textarea id="src" placeholder="Paste the full HTML here…"></textarea>
 
@@ -201,6 +259,7 @@
     </details>
 
     <div class="actions">
+      <button class="secondary" id="aiBtn">✨ Auto-fill with AI</button>
       <button class="primary"   id="genBtn">Generate</button>
       <button class="secondary" id="dlBtn"  disabled>Download .html</button>
       <button class="secondary" id="cpBtn"  disabled>Copy HTML</button>
@@ -309,7 +368,7 @@
     });
   }
 
-  // ── Extract everything we need from Gal's HTML ──
+  // ── Build config: AI results take precedence, regex fallback fills gaps ──
   function extractConfig(src) {
     const cfg = { ...DEFAULTS };
     cfg.PRIMARY_COLOR = activePalette.primary;
@@ -318,6 +377,36 @@
     cfg.ACCENT_DARK   = activePalette.accentDark;
     cfg.PRIMARY_RGB   = hexToRgb(activePalette.primary);
     cfg.ACCENT_RGB    = hexToRgb(activePalette.accent);
+
+    // Apply AI extras first (if AI was run)
+    const ai = window.__aiExtras;
+    if (ai) {
+      ['TRIP_NAME','AGE_RANGE','DAY_OF_WEEK','TRIP_DATE','START_TIME','END_TIME','DISTANCE','HERO_IMAGE','INFO_IMAGE'].forEach(k => {
+        if (ai[k]) cfg[k] = ai[k];
+      });
+      const PC = {};
+      if (ai._flash && ai._flash.single && ai._flash.until) {
+        PC.flashSale = { until: ai._flash.until, single: ai._flash.single, couple: null,
+                         label: ai._flash.label || 'מחיר מבצע', note: '' };
+      }
+      if (ai._tier2 && ai._tier2.single) {
+        PC.tier2 = { until: ai._tier2.until || '', single: ai._tier2.single, couple: ai._tier2.couple || null,
+                     label: ai._tier2.label || 'מדרגת מחיר', note: '' };
+      }
+      if (ai._full && ai._full.single) {
+        PC.fullPrice = { single: ai._full.single, couple: ai._full.couple || null,
+                         label: 'מחיר מלא', note: '' };
+      }
+      if (Object.keys(PC).length) cfg.PRICE_CONFIG_JSON = JSON.stringify(PC, null, 2);
+      cfg.TICKET_LINKS_JSON = JSON.stringify({
+        womenSingle: ai._links?.womenSingle || null,
+        womenCouple: ai._links?.womenCouple || null,
+        men:         ai._links?.men || null,
+      }, null, 2);
+      // AI handled everything; skip the regex fallback to avoid overwrites
+      return cfg;
+    }
+
     const doc = new DOMParser().parseFromString(src, 'text/html');
     const text = doc.body ? doc.body.textContent : src;
 
@@ -469,9 +558,9 @@
     btn.disabled = true; btn.textContent = 'Generating…';
     try {
       const cfg = extractConfig(src);
-      // First time we see this source → fill the texts panel from extraction.
-      // Subsequent generations (palette changes, manual edits) keep panel values.
-      if (isFreshSource) fillTextsPanel(cfg);
+      // Auto-fill texts panel from regex extraction only on first sight of a
+      // new source AND when AI hasn't already populated those fields.
+      if (isFreshSource && !window.__aiExtras) fillTextsPanel(cfg);
       // Always apply manual text overrides last (so user edits win)
       readTextOverrides(cfg);
       lastHTML = await render(cfg);
@@ -501,6 +590,185 @@
     try { await navigator.clipboard.writeText(lastHTML); log('copied', 'ok'); }
     catch (e) { log('copy failed: ' + e.message, 'err'); }
   });
+
+  // ── Bookmarklet generation ──
+  // Uses window.name to ferry the page HTML across origins (size-friendly,
+  // works around localStorage being per-origin). Builder reads window.name
+  // on load and clears it.
+  const BUILDER_URL = location.origin + location.pathname;  // same page
+  const BOOKMARKLET = 'javascript:(function(){var h=document.documentElement.outerHTML;var w=window.open("about:blank");w.name="[GAL_HTML]"+h;w.location=' + JSON.stringify(BUILDER_URL + '?from=bm') + ';})();';
+  $('#bookmarkletLink').setAttribute('href', BOOKMARKLET);
+
+  // ── On load: if the bookmarklet stuffed HTML in window.name, pull it in ──
+  (function pickupFromBookmarklet() {
+    if (window.name && window.name.startsWith('[GAL_HTML]')) {
+      const html = window.name.slice('[GAL_HTML]'.length);
+      window.name = '';
+      $('#src').value = html;
+      log('HTML received from bookmarklet (' + html.length + ' bytes)', 'ok');
+      // If a key is set, auto-trigger AI extraction
+      if (localStorage.getItem('geminiKey')) {
+        setTimeout(aiAutofill, 100);
+      }
+    }
+  })();
+
+  // ── API-key handling ──
+  function refreshKeyState() {
+    const has = !!localStorage.getItem('geminiKey');
+    const el = $('#keyState');
+    el.textContent = has ? 'key saved' : 'no key';
+    el.classList.toggle('missing', !has);
+    if (has) $('#apiKey').value = localStorage.getItem('geminiKey');
+  }
+  $('#saveKeyBtn').addEventListener('click', () => {
+    const v = $('#apiKey').value.trim();
+    if (!v) { log('paste a key first', 'warn'); return; }
+    localStorage.setItem('geminiKey', v);
+    refreshKeyState();
+    log('key saved to this browser', 'ok');
+  });
+  $('#clearKeyBtn').addEventListener('click', () => {
+    localStorage.removeItem('geminiKey');
+    $('#apiKey').value = '';
+    refreshKeyState();
+    log('key cleared', 'warn');
+  });
+  refreshKeyState();
+
+  // ── Gemini AI extraction ──
+  const AI_SCHEMA = {
+    type: 'object',
+    properties: {
+      trip_name:           { type: 'string' },
+      age_range:           { type: 'string' },
+      day_of_week:         { type: 'string' },
+      trip_date:           { type: 'string' },
+      start_time:          { type: 'string' },
+      end_time:            { type: 'string' },
+      distance:            { type: 'string' },
+      hero_image:          { type: 'string' },
+      info_image:          { type: 'string' },
+      page_title:          { type: 'string' },
+      page_description:    { type: 'string' },
+      hero_badge:          { type: 'string' },
+      hero_h1:             { type: 'string' },
+      hero_h2:             { type: 'string' },
+      info_headline:       { type: 'string' },
+      info_lead:           { type: 'string' },
+      registration_headline:{ type: 'string' },
+      ticket_ws_label:     { type: 'string' },
+      ticket_wc_label:     { type: 'string' },
+      ticket_m_label:      { type: 'string' },
+      flash_until:         { type: 'string' },
+      flash_single:        { type: 'integer' },
+      flash_label:         { type: 'string' },
+      tier2_until:         { type: 'string' },
+      tier2_single:        { type: 'integer' },
+      tier2_couple:        { type: 'integer' },
+      tier2_label:         { type: 'string' },
+      full_single:         { type: 'integer' },
+      full_couple:         { type: 'integer' },
+      payment_link_women_single: { type: 'string' },
+      payment_link_women_couple: { type: 'string' },
+      payment_link_men:    { type: 'string' },
+    }
+  };
+
+  const AI_PROMPT_PREFIX =
+    "אתה מחלץ מידע מ-HTML של דף נחיתה (בעברית) ומחזיר JSON תואם לסכמה. " +
+    "חוקים חשובים:\n" +
+    "1. אסור להמציא מידע. אם שדה לא מופיע במפורש בעמוד — החזר מחרוזת ריקה (\"\") או 0 למספרים.\n" +
+    "2. שמור על הטקסט כפי שהוא בעמוד (אל תתרגם, אל תשנה ניסוח).\n" +
+    "3. לקישורי תשלום — קישורים ל-greeninvoice.co.il או ravpage checkout בלבד; שייך לפי הטקסט הסמוך (\"לנשים\"/\"זוגי\"/\"גברים\").\n" +
+    "4. תאריכים בפורמט YYYY-MM-DD אם אפשר.\n" +
+    "5. דוגמה לערך שדה: {\"trip_name\":\"נחל גילבון\",\"age_range\":\"25-35\",...}.\n\n" +
+    "ה-HTML:\n";
+
+  async function aiExtract(html) {
+    const key = localStorage.getItem('geminiKey');
+    if (!key) throw new Error('Gemini key not set — add it in Setup ▾');
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(key);
+    const body = {
+      contents: [{ role: 'user', parts: [{ text: AI_PROMPT_PREFIX + html }] }],
+      generationConfig: {
+        temperature: 0.1,
+        responseMimeType: 'application/json',
+        responseSchema: AI_SCHEMA,
+      }
+    };
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      throw new Error('Gemini ' + r.status + ': ' + t.slice(0, 200));
+    }
+    const data = await r.json();
+    const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!txt) throw new Error('Empty AI response');
+    return JSON.parse(txt);
+  }
+
+  // Map AI JSON → form fields (texts panel) and prices/links/colors via cfg
+  function applyAIResult(j) {
+    const setText = (id, v) => { if (v) document.getElementById(id).value = v; };
+    setText('t_PAGE_TITLE',           j.page_title);
+    setText('t_PAGE_DESCRIPTION',     j.page_description);
+    setText('t_HERO_BADGE',           j.hero_badge);
+    setText('t_HERO_H1',              j.hero_h1);
+    setText('t_HERO_H2',              j.hero_h2);
+    setText('t_INFO_HEADLINE',        j.info_headline);
+    setText('t_INFO_LEAD',            j.info_lead);
+    setText('t_REGISTRATION_HEADLINE',j.registration_headline);
+    setText('t_TICKET_WS_LABEL',      j.ticket_ws_label);
+    setText('t_TICKET_WC_LABEL',      j.ticket_wc_label);
+    setText('t_TICKET_M_LABEL',       j.ticket_m_label);
+    // Stash non-text AI fields on window so generate() can pick them up
+    window.__aiExtras = {
+      TRIP_NAME:   j.trip_name,
+      AGE_RANGE:   j.age_range,
+      DAY_OF_WEEK: j.day_of_week,
+      TRIP_DATE:   j.trip_date,
+      START_TIME:  j.start_time,
+      END_TIME:    j.end_time,
+      DISTANCE:    j.distance,
+      HERO_IMAGE:  j.hero_image,
+      INFO_IMAGE:  j.info_image || j.hero_image,
+      _flash:  { until: j.flash_until,  single: j.flash_single,  label: j.flash_label  },
+      _tier2:  { until: j.tier2_until,  single: j.tier2_single,  couple: j.tier2_couple, label: j.tier2_label },
+      _full:   { single: j.full_single, couple: j.full_couple },
+      _links:  {
+        womenSingle: j.payment_link_women_single,
+        womenCouple: j.payment_link_women_couple,
+        men:         j.payment_link_men,
+      }
+    };
+  }
+
+  async function aiAutofill() {
+    const src = $('#src').value.trim();
+    if (!src) { log('paste HTML or use the bookmarklet first', 'warn'); return; }
+    const btn = $('#aiBtn');
+    btn.disabled = true; btn.textContent = '✨ Thinking…';
+    try {
+      log('asking Gemini…');
+      const j = await aiExtract(src);
+      applyAIResult(j);
+      log('AI extraction done — review fields and Generate', 'ok');
+    } catch (e) {
+      log('AI failed: ' + e.message, 'err');
+    } finally {
+      btn.disabled = false; btn.textContent = '✨ Auto-fill with AI';
+    }
+  }
+  $('#aiBtn').addEventListener('click', aiAutofill);
+
+  // If user manually edits the source area, drop stale AI results so the next
+  // Generate doesn't reuse them.
+  $('#src').addEventListener('input', () => { window.__aiExtras = null; });
 
   // Custom-color picker: derive darker shades by darkening ~20%
   function darken(hex, pct = 0.22) {
