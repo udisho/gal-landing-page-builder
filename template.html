@@ -148,6 +148,7 @@
       inset: 0;
       background: url('{{HERO_IMAGE}}') center/cover no-repeat;
       z-index: 0;
+      image-orientation: from-image;       /* respect EXIF rotation on phone photos */
     }
     .hero-bg::after {
       content: '';
@@ -501,6 +502,10 @@
       width: 100%;
       height: auto;
       display: block;
+      image-orientation: from-image;       /* respect EXIF rotation */
+    }
+    .info-image img {
+      image-orientation: from-image;
     }
 
     /* ── Registration Section ── */

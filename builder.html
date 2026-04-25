@@ -403,13 +403,18 @@
         womenCouple: ai._links?.womenCouple || null,
         men:         ai._links?.men || null,
       }, null, 2);
-      // Render dynamic HTML blocks from AI arrays
+      // Image distribution: ALWAYS prefer the source's own images for hero/info.
+      // First image → hero. Second image → info (or repeats first if only one).
+      const allImages = ai._images || [];
+      if (allImages.length) {
+        cfg.HERO_IMAGE = ai.HERO_IMAGE || allImages[0];
+        cfg.INFO_IMAGE = ai.INFO_IMAGE || allImages[1] || allImages[0];
+      }
+      // Gallery gets every image NOT already used in hero/info — no duplication.
+      const usedInLayout = new Set([cfg.HERO_IMAGE, cfg.INFO_IMAGE].filter(Boolean));
+      const galleryImages = allImages.filter(u => !usedInLayout.has(u));
       cfg.INCLUDED_CARD_HTML = buildIncludedCardHTML(ai._included || []);
-      cfg.REVIEWS_HTML       = buildReviewsHTML(ai._images || []);
-      // If AI didn't return any images of its own, leave hero/info as defaults;
-      // but if it did and hero_image was empty, take the first AI image.
-      if (!ai.HERO_IMAGE && ai._images && ai._images.length) cfg.HERO_IMAGE = ai._images[0];
-      if (!ai.INFO_IMAGE && ai._images && ai._images.length) cfg.INFO_IMAGE = ai._images[1] || ai._images[0];
+      cfg.REVIEWS_HTML       = buildReviewsHTML(galleryImages);
       // AI handled everything; skip the regex fallback to avoid overwrites
       return cfg;
     }
