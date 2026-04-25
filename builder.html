@@ -677,13 +677,21 @@
   };
 
   const AI_PROMPT_PREFIX =
-    "אתה מחלץ מידע מ-HTML של דף נחיתה (בעברית) ומחזיר JSON תואם לסכמה. " +
-    "חוקים חשובים:\n" +
-    "1. אסור להמציא מידע. אם שדה לא מופיע במפורש בעמוד — החזר מחרוזת ריקה (\"\") או 0 למספרים.\n" +
-    "2. שמור על הטקסט כפי שהוא בעמוד (אל תתרגם, אל תשנה ניסוח).\n" +
-    "3. לקישורי תשלום — קישורים ל-greeninvoice.co.il או ravpage checkout בלבד; שייך לפי הטקסט הסמוך (\"לנשים\"/\"זוגי\"/\"גברים\").\n" +
-    "4. תאריכים בפורמט YYYY-MM-DD אם אפשר.\n" +
-    "5. דוגמה לערך שדה: {\"trip_name\":\"נחל גילבון\",\"age_range\":\"25-35\",...}.\n\n" +
+    "המשימה שלך: לחלץ מידע מ-HTML של דף נחיתה ולהחזיר JSON תואם לסכמה.\n" +
+    "אתה מבצע COPY-PASTE בלבד, לא יצירה או עריכה.\n\n" +
+    "כללים קשיחים — חובה לעמוד בכולם:\n" +
+    "1. **Verbatim**: כל ערך טקסט חייב להיות מועתק מילה במילה מה-HTML המקור. אסור לשנות אפילו תו אחד — לא ניסוח, לא פיסוק, לא סדר מילים, לא רווחים, לא תיקון שגיאות כתיב.\n" +
+    "2. **לא ממציאים**: אם המידע לא מופיע במפורש בטקסט — החזר \"\" (מחרוזת ריקה) למחרוזות, 0 או null למספרים. אסור לנחש, אסור להוסיף פרטים גנריים (למשל אם לא כתוב \"כריכים\" — אל תכתוב \"כריכים\").\n" +
+    "3. **לא משלימים**: אם משפט קטוע, השאר אותו קטוע כמו במקור. אסור להשלים, להרחיב, או לסכם.\n" +
+    "4. **לא מתרגמים**: כל הטקסט נשאר בעברית בדיוק כפי שהיה.\n" +
+    "5. **לא משפרים**: אסור לעבד את הטקסט שיהיה \"יפה יותר\" או \"מקצועי יותר\". העתקה גרידא.\n" +
+    "6. **לקישורי תשלום**: רק קישורים ל-greeninvoice.co.il או checkout של ravpage. שייך לסוג הכרטיס לפי טקסט סמוך (\"לנשים\" / \"זוגי\" / \"גברים\"). אם אין קישור — החזר \"\".\n" +
+    "7. **תאריכים**: אם רואה תאריך מלא — החזר YYYY-MM-DD. אם רק תאריך עברי כמו \"2.5\" — שים אותו ב-trip_date כמחרוזת.\n" +
+    "8. **מחירים**: רק מספרים שהופיעו ליד \"₪\" או \"ש\\\"ח\" באופן ברור. אסור לחשב או להשלים.\n" +
+    "9. **תמונות**: hero_image ו-info_image חייבים להיות URL מלא שמתחיל ב-https:// (או http://) ומופיע במפורש בקוד המקור — בתוך src של תג <img>, ב-content של meta[property=og:image], או ב-url() של background ב-style. אסור להמציא URL, אסור לבנות URL מנתיב יחסי, אסור להחזיר data:URI או placeholder. אם אין URL מתאים — החזר \"\" ונשתמש בברירת מחדל.\n\n" +
+    "דוגמה — אם בעמוד כתוב \"טיול נשים בעמק המעיינות\":\n" +
+    "  - hero_h1 = \"טיול נשים בעמק המעיינות\" (לא \"טיול הכרויות בעמק המעיינות\", לא \"הצטרפו לטיול\").\n" +
+    "  - אם לא כתוב מה כלול בארוחת בוקר — info_lead לא יזכיר \"כריכים\" או כל פרט אחר שלא נמצא בטקסט.\n\n" +
     "ה-HTML:\n";
 
   async function aiExtract(html) {
@@ -693,11 +701,9 @@
     const body = {
       contents: [{ role: 'user', parts: [{ text: AI_PROMPT_PREFIX + html }] }],
       generationConfig: {
-        temperature: 0.1,
+        temperature: 0,            // fully deterministic — no creative drift
         responseMimeType: 'application/json',
         responseSchema: AI_SCHEMA,
-        // Disable Gemini 2.5's "thinking" tokens — extraction doesn't need
-        // chain-of-thought, and skipping it makes responses much faster + cheaper.
         thinkingConfig: { thinkingBudget: 0 },
       }
     };
@@ -716,8 +722,24 @@
     return JSON.parse(txt);
   }
 
+  // Sanity-check that an AI-supplied URL is a real absolute http(s) URL.
+  // Returns null if it looks fishy so we fall back to the default.
+  function safeUrl(u) {
+    if (!u || typeof u !== 'string') return null;
+    if (!/^https?:\/\//i.test(u)) return null;
+    if (/^data:|^javascript:|^blob:/i.test(u)) return null;
+    try { new URL(u); } catch { return null; }
+    return u;
+  }
+
   // Map AI JSON → form fields (texts panel) and prices/links/colors via cfg
   function applyAIResult(j) {
+    // Sanitise URL fields BEFORE they touch the form / extras
+    j.hero_image = safeUrl(j.hero_image) || '';
+    j.info_image = safeUrl(j.info_image) || '';
+    ['payment_link_women_single','payment_link_women_couple','payment_link_men'].forEach(k => {
+      j[k] = safeUrl(j[k]) || '';
+    });
     const setText = (id, v) => { if (v) document.getElementById(id).value = v; };
     setText('t_PAGE_TITLE',           j.page_title);
     setText('t_PAGE_DESCRIPTION',     j.page_description);
