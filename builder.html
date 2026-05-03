@@ -273,6 +273,13 @@
       <!-- styles injected by JS -->
     </div>
 
+    <div class="style-row" id="tripTypes">
+      <span class="label">Trip type:</span>
+      <button type="button" class="style-chip active" data-trip-type="singles"><strong>Singles / meeting</strong><span>social framing for meeting-oriented hikes</span></button>
+      <button type="button" class="style-chip" data-trip-type="women"><strong>Women only</strong><span>women-focused trip language and defaults</span></button>
+      <button type="button" class="style-chip" data-trip-type="open"><strong>Open to all</strong><span>general trip language without meetup framing</span></button>
+    </div>
+
     <details class="texts" open id="visualPanel">
       <summary>Visual controls</summary>
       <div class="grid">
@@ -364,6 +371,35 @@
     { name: 'Sunset',         primary: '#c53030', primaryDark: '#8b2020', accent: '#f6ad55', accentDark: '#d4873a' },
   ];
   let activePalette = PALETTES[0];
+  const TRIP_TYPE_DEFAULTS = {
+    singles: {
+      HERO_BADGE: 'Gal Travels',
+      HERO_H2: 'מקומות מוגבלים — הירשמו עוד היום',
+      INFO_LEAD: 'הצטרפו אלינו לטיול בגילאי {{AGE_RANGE}} — באווירה נינוחה וטבעית.',
+      TICKET_WS_LABEL: 'כרטיס יחיד',
+      TICKET_WC_LABEL: 'כרטיס זוגי',
+      TICKET_M_LABEL: 'כרטיס נוסף',
+      TRUST_BADGES: ['טיול מודרך', 'קהילת סינגלים', 'צילומים מקצועיים', 'תשלום מאובטח'],
+    },
+    women: {
+      HERO_BADGE: 'Gal Travels',
+      HERO_H2: 'יום טבע נשי ומדויק — הירשמו עוד היום',
+      INFO_LEAD: 'הצטרפו אלינו לטיול נשי בגילאי {{AGE_RANGE}} — באווירה נינוחה וטבעית.',
+      TICKET_WS_LABEL: 'הרשמה לטיול',
+      TICKET_WC_LABEL: 'הרשמה זוגית',
+      TICKET_M_LABEL: 'מקום נוסף',
+      TRUST_BADGES: ['טיול מודרך', 'קבוצת נשים', 'צילומים מקצועיים', 'תשלום מאובטח'],
+    },
+    open: {
+      HERO_BADGE: 'Gal Travels',
+      HERO_H2: 'הירשמו לטיול הקרוב וצאו לשטח',
+      INFO_LEAD: 'הצטרפו אלינו לטיול בגילאי {{AGE_RANGE}} — באווירה נעימה ובטבע.',
+      TICKET_WS_LABEL: 'הרשמה',
+      TICKET_WC_LABEL: 'הרשמה זוגית',
+      TICKET_M_LABEL: 'מקום נוסף',
+      TRUST_BADGES: ['טיול מודרך', 'פתוח לכולם', 'צילומים מקצועיים', 'תשלום מאובטח'],
+    },
+  };
   const STYLES = [
     { name: 'Editorial', className: 'style-editorial', hint: 'clean premium layout, source photos lead the page' },
     { name: 'Trail Cards', className: 'style-trail-cards', hint: 'warmer cards and softer travel-club energy' },
@@ -372,17 +408,10 @@
     { name: 'Summer Ridge', className: 'style-graphics-summer', hint: 'sunlit peaks, pine silhouettes and warm trails' },
     { name: 'Autumn Valley', className: 'style-graphics-autumn', hint: 'amber hills, forest layers and creek lines' },
     { name: 'Winter Peak', className: 'style-graphics-winter', hint: 'cool blue mountains, bare trees and icy water' },
-    {
-      name: 'Dreamscape',
-      className: 'style-dreamscape',
-      hint: 'creative mode with alternate hero scenes instead of source-only photos',
-      imageOverrides: {
-        hero: 'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/19aee3702e9ac6ce5eaeaad05fb4f948.jpeg?maxWidth=1400',
-        registration: 'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/4ca5131b8ca56a4e450feb73802fc274.jpeg?maxWidth=1400',
-      }
-    },
+    { name: 'Dreamscape', className: 'style-dreamscape', hint: 'creative mode with atmospheric gradients over source imagery' },
   ];
   let activeStyle = STYLES[0];
+  let activeTripType = 'singles';
 
   function renderPaletteRow() {
     const row = document.getElementById('palettes');
@@ -421,6 +450,18 @@
         if (window.__lastSrc) generate();
       });
       row.appendChild(el);
+    });
+  }
+
+  function renderTripTypeRow() {
+    document.querySelectorAll('#tripTypes [data-trip-type]').forEach(el => {
+      el.classList.toggle('active', el.dataset.tripType === activeTripType);
+      el.addEventListener('click', () => {
+        activeTripType = el.dataset.tripType;
+        document.querySelectorAll('#tripTypes [data-trip-type]').forEach(n => n.classList.toggle('active', n === el));
+        saveState();
+        if (window.__lastSrc) generate();
+      });
     });
   }
 
@@ -463,6 +504,7 @@
     return {
       src: $('#src').value,
       styleClass: activeStyle.className,
+      tripType: activeTripType,
       palette: {
         name: activePalette.name,
         primary: activePalette.primary,
@@ -514,6 +556,7 @@
         const presetStyle = STYLES.find(s => s.className === state.styleClass);
         if (presetStyle) activeStyle = presetStyle;
       }
+      if (state.tripType && TRIP_TYPE_DEFAULTS[state.tripType]) activeTripType = state.tripType;
       if (state.customPrimary) $('#customPrimary').value = state.customPrimary;
       if (state.customAccent) $('#customAccent').value = state.customAccent;
       if (typeof state.src === 'string') $('#src').value = state.src;
@@ -589,7 +632,7 @@
 
   // ── Build config: AI results take precedence, regex fallback fills gaps ──
   function extractConfig(src) {
-    const cfg = { ...DEFAULTS };
+    const cfg = { ...DEFAULTS, ...TRIP_TYPE_DEFAULTS[activeTripType] };
     const visuals = readVisualSettings();
     cfg.PRIMARY_COLOR = activePalette.primary;
     cfg.PRIMARY_DARK  = activePalette.primaryDark;
@@ -598,6 +641,10 @@
     cfg.PRIMARY_RGB   = hexToRgb(activePalette.primary);
     cfg.ACCENT_RGB    = hexToRgb(activePalette.accent);
     cfg.STYLE_CLASS   = activeStyle.className;
+    cfg.TRUST_BADGE_1 = TRIP_TYPE_DEFAULTS[activeTripType].TRUST_BADGES[0];
+    cfg.TRUST_BADGE_2 = TRIP_TYPE_DEFAULTS[activeTripType].TRUST_BADGES[1];
+    cfg.TRUST_BADGE_3 = TRIP_TYPE_DEFAULTS[activeTripType].TRUST_BADGES[2];
+    cfg.TRUST_BADGE_4 = TRIP_TYPE_DEFAULTS[activeTripType].TRUST_BADGES[3];
 
     // Apply AI extras first (if AI was run)
     const ai = window.__aiExtras;
@@ -645,10 +692,6 @@
       }
       cfg.INFO_IMAGE = cfg.INFO_IMAGE || cfg.HERO_IMAGE;
       cfg.REGISTRATION_IMAGE = cfg.REGISTRATION_IMAGE || cfg.INFO_IMAGE || cfg.HERO_IMAGE;
-      if (activeStyle.imageOverrides) {
-        cfg.HERO_IMAGE = activeStyle.imageOverrides.hero || cfg.HERO_IMAGE;
-        cfg.REGISTRATION_IMAGE = activeStyle.imageOverrides.registration || cfg.REGISTRATION_IMAGE;
-      }
       // Gallery gets every image NOT already used in hero/info (compared by
       // canonical key, so size variants don't slip through).
       const usedKeys = new Set(
@@ -744,10 +787,6 @@
     }
     cfg.INFO_IMAGE = cfg.INFO_IMAGE || cfg.HERO_IMAGE;
     cfg.REGISTRATION_IMAGE = cfg.REGISTRATION_IMAGE || cfg.INFO_IMAGE || cfg.HERO_IMAGE;
-    if (activeStyle.imageOverrides) {
-      cfg.HERO_IMAGE = activeStyle.imageOverrides.hero || cfg.HERO_IMAGE;
-      cfg.REGISTRATION_IMAGE = activeStyle.imageOverrides.registration || cfg.REGISTRATION_IMAGE;
-    }
     if (isGraphicsOnlyStyle()) {
       cfg.HERO_IMAGE = FALLBACK_IMAGE;
       cfg.INFO_IMAGE = FALLBACK_IMAGE;
