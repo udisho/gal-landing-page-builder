@@ -1113,45 +1113,162 @@
       box-shadow: 0 22px 46px rgba(22, 15, 32, 0.16);
     }
 
-    body.style-graphics-only .hero-bg,
-    body.style-graphics-only .registration-bg {
+    body[class*="style-graphics-"] .hero-bg,
+    body[class*="style-graphics-"] .registration-bg {
       background:
         radial-gradient(circle at 18% 24%, rgba({{ACCENT_RGB}},0.42), transparent 24%),
         radial-gradient(circle at 82% 18%, rgba(255,255,255,0.18), transparent 20%),
         linear-gradient(140deg, rgba({{PRIMARY_RGB}},0.96) 0%, rgba(26,26,46,0.98) 55%, rgba({{ACCENT_RGB}},0.82) 100%);
     }
-    body.style-graphics-only .hero-bg img,
-    body.style-graphics-only .registration-bg img {
+    body[class*="style-graphics-"] .hero-bg img,
+    body[class*="style-graphics-"] .registration-bg img {
       display: none;
     }
-    body.style-graphics-only .hero-bg::before,
-    body.style-graphics-only .registration-bg::before {
+    body[class*="style-graphics-"] .hero-bg::before,
+    body[class*="style-graphics-"] .registration-bg::before {
       content: '';
       position: absolute;
       inset: 12%;
       border: 1px solid rgba(255,255,255,0.16);
       border-radius: 34px;
     }
-    body.style-graphics-only .info-container {
+    body[class*="style-graphics-"] .info-container {
       grid-template-columns: 1fr;
       max-width: 760px;
     }
-    body.style-graphics-only .info-image,
-    body.style-graphics-only .gallery {
+    body[class*="style-graphics-"] .info-image,
+    body[class*="style-graphics-"] .gallery {
       display: none;
     }
-    body.style-graphics-only .info,
-    body.style-graphics-only .pricing,
-    body.style-graphics-only .policy {
+    body[class*="style-graphics-"] .info,
+    body[class*="style-graphics-"] .pricing,
+    body[class*="style-graphics-"] .policy {
       background:
         radial-gradient(circle at top right, rgba({{ACCENT_RGB}},0.12), transparent 24%),
         linear-gradient(180deg, #fcfbfd 0%, #f4f0f7 100%);
     }
-    body.style-graphics-only .detail-card,
-    body.style-graphics-only .price-card,
-    body.style-graphics-only .policy details {
+    body[class*="style-graphics-"] .detail-card,
+    body[class*="style-graphics-"] .price-card,
+    body[class*="style-graphics-"] .policy details {
       border-radius: 28px;
       box-shadow: 0 18px 40px rgba(23, 18, 32, 0.08);
+    }
+    body[class*="style-graphics-"] .hero::before,
+    body[class*="style-graphics-"] .registration::before {
+      content: '';
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 34%;
+      background:
+        radial-gradient(circle at 15% 100%, rgba(255,255,255,0.22) 0 10%, transparent 11%),
+        radial-gradient(circle at 78% 100%, rgba(255,255,255,0.16) 0 9%, transparent 10%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    body.style-graphics-spring .hero-bg,
+    body.style-graphics-spring .registration-bg {
+      background:
+        radial-gradient(circle at 18% 18%, rgba(246, 247, 220, 0.55), transparent 20%),
+        linear-gradient(180deg, #dcf0df 0%, #8cc39a 45%, #4f7f60 100%);
+    }
+    body.style-graphics-spring .hero-bg::after,
+    body.style-graphics-spring .registration-bg::after {
+      background:
+        linear-gradient(180deg, rgba(18,44,27,0.12) 0%, rgba(47,89,60,0.45) 56%, rgba(28,54,37,0.72) 100%),
+        radial-gradient(circle at 50% 88%, rgba(124, 188, 156, 0.45), transparent 25%);
+    }
+    body.style-graphics-spring .hero-bg::before,
+    body.style-graphics-spring .registration-bg::before {
+      inset: auto 6% 12% 6%;
+      height: 30%;
+      border: none;
+      border-radius: 0;
+      background:
+        linear-gradient(180deg, transparent 0 32%, rgba(255,255,255,0.22) 33% 36%, transparent 37%),
+        radial-gradient(circle at 12% 70%, #31553d 0 10%, transparent 11%),
+        radial-gradient(circle at 27% 62%, #426b4e 0 11%, transparent 12%),
+        radial-gradient(circle at 44% 68%, #355944 0 10%, transparent 11%),
+        radial-gradient(circle at 71% 63%, #426b4e 0 11%, transparent 12%),
+        radial-gradient(circle at 86% 70%, #31553d 0 10%, transparent 11%);
+    }
+
+    body.style-graphics-summer .hero-bg,
+    body.style-graphics-summer .registration-bg {
+      background:
+        radial-gradient(circle at 78% 14%, rgba(255, 222, 119, 0.82), transparent 14%),
+        linear-gradient(180deg, #9ed6f5 0%, #4b9fd1 42%, #224f6b 100%);
+    }
+    body.style-graphics-summer .hero-bg::after,
+    body.style-graphics-summer .registration-bg::after {
+      background:
+        linear-gradient(180deg, rgba(15,29,43,0.12) 0%, rgba(30,72,99,0.36) 54%, rgba(20,39,29,0.84) 100%);
+    }
+    body.style-graphics-summer .hero-bg::before,
+    body.style-graphics-summer .registration-bg::before {
+      inset: auto 4% 10% 4%;
+      height: 38%;
+      border: none;
+      border-radius: 0;
+      background:
+        linear-gradient(180deg, transparent 0 28%, rgba(243,195,104,0.16) 29% 34%, transparent 35%),
+        conic-gradient(from 180deg at 15% 100%, #1d4a32 0 28deg, transparent 29deg 360deg),
+        conic-gradient(from 180deg at 28% 100%, #183e2b 0 24deg, transparent 25deg 360deg),
+        conic-gradient(from 180deg at 44% 100%, #234f38 0 26deg, transparent 27deg 360deg),
+        conic-gradient(from 180deg at 71% 100%, #183e2b 0 24deg, transparent 25deg 360deg),
+        conic-gradient(from 180deg at 85% 100%, #1d4a32 0 28deg, transparent 29deg 360deg);
+    }
+
+    body.style-graphics-autumn .hero-bg,
+    body.style-graphics-autumn .registration-bg {
+      background:
+        radial-gradient(circle at 20% 16%, rgba(255, 219, 160, 0.58), transparent 16%),
+        linear-gradient(180deg, #f7d5b1 0%, #d88d59 40%, #6f3b2c 100%);
+    }
+    body.style-graphics-autumn .hero-bg::after,
+    body.style-graphics-autumn .registration-bg::after {
+      background:
+        linear-gradient(180deg, rgba(78,31,19,0.06) 0%, rgba(111,59,44,0.38) 46%, rgba(55,28,18,0.86) 100%);
+    }
+    body.style-graphics-autumn .hero-bg::before,
+    body.style-graphics-autumn .registration-bg::before {
+      inset: auto 5% 9% 5%;
+      height: 38%;
+      border: none;
+      border-radius: 0;
+      background:
+        linear-gradient(180deg, transparent 0 34%, rgba(126, 195, 207, 0.25) 35% 38%, transparent 39%),
+        radial-gradient(ellipse at 18% 100%, #874a32 0 24%, transparent 25%),
+        radial-gradient(ellipse at 42% 100%, #6f3b2c 0 26%, transparent 27%),
+        radial-gradient(ellipse at 68% 100%, #9b5f35 0 24%, transparent 25%),
+        radial-gradient(ellipse at 88% 100%, #5f2f25 0 22%, transparent 23%);
+    }
+
+    body.style-graphics-winter .hero-bg,
+    body.style-graphics-winter .registration-bg {
+      background:
+        radial-gradient(circle at 76% 12%, rgba(241, 248, 255, 0.48), transparent 16%),
+        linear-gradient(180deg, #dceaf4 0%, #88a8bf 38%, #264254 100%);
+    }
+    body.style-graphics-winter .hero-bg::after,
+    body.style-graphics-winter .registration-bg::after {
+      background:
+        linear-gradient(180deg, rgba(17,32,43,0.06) 0%, rgba(31,63,85,0.36) 48%, rgba(13,23,34,0.88) 100%);
+    }
+    body.style-graphics-winter .hero-bg::before,
+    body.style-graphics-winter .registration-bg::before {
+      inset: auto 4% 9% 4%;
+      height: 40%;
+      border: none;
+      border-radius: 0;
+      background:
+        linear-gradient(180deg, transparent 0 32%, rgba(175, 221, 239, 0.24) 33% 36%, transparent 37%),
+        linear-gradient(135deg, transparent 0 46%, #9eb8c8 47% 54%, transparent 55%),
+        linear-gradient(225deg, transparent 0 42%, #dce8f0 43% 49%, transparent 50%),
+        radial-gradient(circle at 18% 74%, #365469 0 7%, transparent 8%),
+        radial-gradient(circle at 30% 70%, #2f4b5d 0 6.5%, transparent 7.5%),
+        radial-gradient(circle at 74% 72%, #365469 0 7%, transparent 8%),
+        radial-gradient(circle at 86% 68%, #2f4b5d 0 6.5%, transparent 7.5%);
     }
     .particle:nth-child(1) { width: 80px; height: 80px; top: 20%; right: 10%; animation-delay: 0s; }
     .particle:nth-child(2) { width: 50px; height: 50px; top: 60%; right: 70%; animation-delay: 1.5s; }

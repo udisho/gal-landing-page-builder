@@ -368,7 +368,10 @@
     { name: 'Editorial', className: 'style-editorial', hint: 'clean premium layout, source photos lead the page' },
     { name: 'Trail Cards', className: 'style-trail-cards', hint: 'warmer cards and softer travel-club energy' },
     { name: 'Bold Poster', className: 'style-bold-poster', hint: 'big typography, stronger sections, more campaign feel' },
-    { name: 'Graphics Only', className: 'style-graphics-only', hint: 'no photos, just designed gradients and shapes' },
+    { name: 'Spring Trail', className: 'style-graphics-spring', hint: 'fresh green ridges, trees and stream curves' },
+    { name: 'Summer Ridge', className: 'style-graphics-summer', hint: 'sunlit peaks, pine silhouettes and warm trails' },
+    { name: 'Autumn Valley', className: 'style-graphics-autumn', hint: 'amber hills, forest layers and creek lines' },
+    { name: 'Winter Peak', className: 'style-graphics-winter', hint: 'cool blue mountains, bare trees and icy water' },
     {
       name: 'Dreamscape',
       className: 'style-dreamscape',
@@ -419,6 +422,10 @@
       });
       row.appendChild(el);
     });
+  }
+
+  function isGraphicsOnlyStyle() {
+    return activeStyle.className.startsWith('style-graphics-');
   }
 
   function clampNum(v, min, max, fallback) {
@@ -655,7 +662,7 @@
       // If the chosen hero image has a rotation override, inject CSS so the
       // hero background renders rotated. Same for info-image.
       let extraCSS = buildVisualCSS(cfg, visuals, rotations);
-      if (activeStyle.className === 'style-graphics-only') {
+      if (isGraphicsOnlyStyle()) {
         cfg.HERO_IMAGE = FALLBACK_IMAGE;
         cfg.INFO_IMAGE = FALLBACK_IMAGE;
         cfg.REGISTRATION_IMAGE = FALLBACK_IMAGE;
@@ -741,7 +748,7 @@
       cfg.HERO_IMAGE = activeStyle.imageOverrides.hero || cfg.HERO_IMAGE;
       cfg.REGISTRATION_IMAGE = activeStyle.imageOverrides.registration || cfg.REGISTRATION_IMAGE;
     }
-    if (activeStyle.className === 'style-graphics-only') {
+    if (isGraphicsOnlyStyle()) {
       cfg.HERO_IMAGE = FALLBACK_IMAGE;
       cfg.INFO_IMAGE = FALLBACK_IMAGE;
       cfg.REGISTRATION_IMAGE = FALLBACK_IMAGE;
