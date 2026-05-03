@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Serve both Gal Travels pages from one port AND open an HTTPS tunnel.
+Serve the Gal Travels landing-page builder locally, with an optional HTTPS tunnel.
 
-  /gilbon    → galtravels-gilbon/index.html
-  /hashofet  → galtravels-hashofet/index.html
-  /          → links to both
+  /          → links to the builder
+  /builder   → builder UI
 
 Usage:
   python3 serve_gal.py                # port 8080, tunnel on
@@ -31,11 +30,6 @@ PORT = int(args[0]) if args else 8080
 TUNNEL = "--no-tunnel" not in flags
 BASE = os.path.dirname(os.path.abspath(__file__))
 
-PAGE_DIRS = {
-    "gilbon":   os.path.join(BASE, "galtravels-gilbon"),
-    "hashofet": os.path.join(BASE, "galtravels-hashofet"),
-}
-
 MIME = {
     ".html": "text/html; charset=utf-8",
     ".css":  "text/css; charset=utf-8",
@@ -49,16 +43,15 @@ MIME = {
 INDEX_HTML = """<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gal Travels</title>
+<title>Gal Travels Builder</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:1.5rem;background:#f5f3f7;}
 a{display:block;padding:1.2rem 2.5rem;background:#513f83;color:#fff;border-radius:12px;text-decoration:none;font-size:1.2rem;font-weight:700;text-align:center;transition:transform .2s;}
 a:hover{transform:scale(1.05);}
 h1{font-size:1.5rem;color:#333;}</style></head>
 <body>
-<h1>Gal Travels - Landing Pages</h1>
-<a href="/gilbon">נחל גילבון (25-35)</a>
-<a href="/hashofet">נחל השופט (45-55)</a>
-<a href="/builder" style="background:#b33">Landing Page Builder →</a>
+<h1>Gal Travels - Landing Page Builder</h1>
+<a href="/builder">Open local builder</a>
+<a href="https://udisho.github.io/gal-landing-page-builder/builder.html" style="background:#b33">Open published builder</a>
 </body></html>"""
 
 ROOT_FILES = {
@@ -143,22 +136,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # URL-fetch proxy for the builder: /api/fetch?url=https://...
         if raw == "/api/fetch":
             self._proxy_fetch(); return
-        parts = [p for p in raw.split("/") if p != ""]
-        if not parts or parts[0] not in PAGE_DIRS:
-            self.send_response(404); self.end_headers(); return
-        page_dir = PAGE_DIRS[parts[0]]
-        # /<page>  -> redirect to /<page>/  so relative paths resolve properly
-        if len(parts) == 1 and not raw.endswith("/"):
-            self._redirect("/" + parts[0] + "/"); return
-        # /<page>/  -> index.html
-        if len(parts) == 1 and raw.endswith("/"):
-            self._send_file(os.path.join(page_dir, "index.html")); return
-        # /<page>/<subpath>  -> static file inside the page dir (sandboxed)
-        sub = "/".join(parts[1:])
-        target = os.path.normpath(os.path.join(page_dir, sub))
-        if not target.startswith(page_dir + os.sep):
-            self.send_response(403); self.end_headers(); return
-        self._send_file(target)
+        self.send_response(404); self.end_headers(); return
 
     def log_message(self, fmt, *args):
         pass  # quiet

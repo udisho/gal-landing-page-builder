@@ -283,7 +283,7 @@
 <script>
 (function () {
   const $  = s => document.querySelector(s);
-  const $$ = s => Array.from(document.querySelectorAll(s));
+  const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
   const logEl = $('#log');
   const log = (m, c = '') => {
     const el = document.createElement('div');
@@ -505,18 +505,24 @@
     if (trip) { cfg.TRIP_NAME = trip[0]; log('trip name: ' + trip[0], 'ok'); }
     else log('trip name not found — check it', 'warn');
 
-    // Hero image from og:image or first <img>
-    const ogImg = doc.querySelector('meta[property="og:image"]')?.getAttribute('content');
-    if (ogImg) { cfg.HERO_IMAGE = ogImg; cfg.INFO_IMAGE = ogImg; log('hero image ← og:image', 'ok'); }
-    else {
-      const img = doc.querySelector('img');
-      if (img?.src) { cfg.HERO_IMAGE = img.src; cfg.INFO_IMAGE = img.src; log('hero image ← first <img>', 'ok'); }
+    // Prefer real page images over Ravpage's generated og:image thumbnail.
+    const pickedImages = pickSourceImages(doc);
+    if (pickedImages.heroImage) {
+      cfg.HERO_IMAGE = pickedImages.heroImage;
+      cfg.INFO_IMAGE = pickedImages.infoImage || pickedImages.heroImage;
+      log('hero image ← source images', 'ok');
+    } else {
+      const ogImg = safeUrl(doc.querySelector('meta[property="og:image"]')?.getAttribute('content'));
+      if (ogImg) {
+        cfg.HERO_IMAGE = ogImg;
+        cfg.INFO_IMAGE = ogImg;
+        log('hero image ← og:image', 'ok');
+      } else {
+        log('hero image not found — using defaults', 'warn');
+      }
     }
 
     // Payment links (Green Invoice or ravpage checkout)
-    const linkEls = $$('a[href*="greeninvoice.co.il"],a[href*="sub.ravpage"],a[href*="ravpage.co.il/subscribe"]')
-      .concat(Array.from(doc.querySelectorAll('a[href*="greeninvoice.co.il"],a[href*="sub.ravpage"],a[href*="ravpage.co.il/subscribe"]')));
-    // Use only doc-side results (not the builder page)
     const links = Array.from(doc.querySelectorAll('a[href*="greeninvoice.co.il"],a[href*="sub.ravpage"],a[href*="ravpage.co.il/subscribe"]'));
     log('payment links found: ' + links.length, links.length ? 'ok' : 'warn');
     const slots = { womenSingle: null, womenCouple: null, men: null };
@@ -921,6 +927,29 @@
       out.push(u);
     }
     return out;
+  }
+
+  function collectCandidateImages(doc) {
+    const images = [];
+    doc.querySelectorAll('img[src]').forEach(img => {
+      const u = safeUrl(img.getAttribute('src') || img.src);
+      if (u) images.push(u);
+    });
+    doc.querySelectorAll('[style*="background"]').forEach(el => {
+      const style = el.getAttribute('style') || '';
+      for (const match of style.matchAll(/url\((['"]?)(.*?)\1\)/gi)) {
+        const u = safeUrl(match[2]);
+        if (u) images.push(u);
+      }
+    });
+    return dedupeByImageKey(images);
+  }
+
+  function pickSourceImages(doc) {
+    const allImages = collectCandidateImages(doc);
+    const heroImage = allImages[0] || null;
+    const infoImage = allImages.find(u => imageKey(u) !== imageKey(heroImage)) || heroImage;
+    return { allImages, heroImage, infoImage };
   }
 
   // Map AI JSON → form fields (texts panel) and prices/links/colors via cfg
