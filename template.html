@@ -521,7 +521,7 @@
       inset: -50%;
       width: 200%;
       height: 200%;
-      background: url('https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/4ca5131b8ca56a4e450feb73802fc274.jpeg?maxWidth=1400') center/cover no-repeat;
+      background: url('{{REGISTRATION_IMAGE}}') center/cover no-repeat;
       transform: rotate(90deg);
       z-index: 0;
     }
@@ -911,17 +911,28 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 2rem;
+      gap: 0.9rem;
       flex-wrap: wrap;
     }
-    .trust-container img {
-      height: 40px;
-      width: auto;
-      opacity: 0.7;
-      transition: opacity 0.3s;
-      filter: grayscale(30%);
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--gray-bg);
+      border-radius: 999px;
+      color: #555;
+      font-size: 0.92rem;
+      font-weight: 600;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.05);
     }
-    .trust-container img:hover { opacity: 1; filter: none; }
+    .trust-badge .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      flex: 0 0 auto;
+    }
 
     /* ── Utility ── */
     .container { max-width: 1000px; margin: 0 auto; }
@@ -981,6 +992,97 @@
       border-radius: 50%;
       background: rgba(255,255,255,0.08);
       animation: float 6s ease-in-out infinite;
+    }
+
+    body.style-editorial .hero-content {
+      max-width: 760px;
+    }
+    body.style-editorial .info-image,
+    body.style-editorial .gallery-item {
+      border-radius: 20px;
+    }
+
+    body.style-trail-cards {
+      background: linear-gradient(180deg, #fffdf9 0%, #f8f4ee 100%);
+    }
+    body.style-trail-cards .info,
+    body.style-trail-cards .gallery {
+      background: linear-gradient(180deg, rgba({{ACCENT_RGB}},0.08), rgba({{PRIMARY_RGB}},0.05));
+    }
+    body.style-trail-cards .detail-card,
+    body.style-trail-cards .price-card,
+    body.style-trail-cards .policy details {
+      border-radius: 26px;
+      box-shadow: 0 18px 40px rgba(34, 28, 20, 0.08);
+    }
+    body.style-trail-cards .detail-card {
+      border-right-width: 0;
+      border-top: 5px solid var(--gold);
+    }
+    body.style-trail-cards .info-image {
+      transform: rotate(-2deg);
+    }
+    body.style-trail-cards .info-image:hover {
+      transform: rotate(0deg);
+    }
+    body.style-trail-cards .gallery-item:nth-child(even) {
+      transform: translateY(20px);
+    }
+
+    body.style-bold-poster .hero {
+      min-height: 88vh;
+      align-items: end;
+    }
+    body.style-bold-poster .hero-content {
+      max-width: 900px;
+      padding-bottom: 5rem;
+    }
+    body.style-bold-poster .hero h1 {
+      font-size: clamp(2.6rem, 9vw, 5.3rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    body.style-bold-poster .hero h2 {
+      font-size: clamp(1.05rem, 3vw, 1.55rem);
+      max-width: 560px;
+      margin: 0 auto 2rem;
+    }
+    body.style-bold-poster .info-container {
+      gap: 3.5rem;
+    }
+    body.style-bold-poster .pricing h3,
+    body.style-bold-poster .gallery h3,
+    body.style-bold-poster .registration-content h2 {
+      letter-spacing: -0.03em;
+    }
+    body.style-bold-poster .gallery-grid {
+      max-width: 1040px;
+    }
+    body.style-bold-poster .gallery-item {
+      border-radius: 4px;
+    }
+
+    body.style-dreamscape .hero-bg::after {
+      background:
+        radial-gradient(circle at 20% 20%, rgba({{ACCENT_RGB}},0.35), transparent 28%),
+        linear-gradient(180deg, rgba(17,22,35,0.28) 0%, rgba({{PRIMARY_RGB}},0.76) 58%, rgba(10,10,22,0.92) 100%);
+    }
+    body.style-dreamscape .hero-badge,
+    body.style-dreamscape .form-card,
+    body.style-dreamscape .form-tab {
+      backdrop-filter: blur(18px);
+    }
+    body.style-dreamscape .info,
+    body.style-dreamscape .gallery {
+      background:
+        radial-gradient(circle at top right, rgba({{ACCENT_RGB}},0.08), transparent 26%),
+        linear-gradient(180deg, #fbfafc 0%, #f2eef6 100%);
+    }
+    body.style-dreamscape .info-image,
+    body.style-dreamscape .gallery-item {
+      border-radius: 28px;
+      box-shadow: 0 22px 46px rgba(22, 15, 32, 0.16);
     }
     .particle:nth-child(1) { width: 80px; height: 80px; top: 20%; right: 10%; animation-delay: 0s; }
     .particle:nth-child(2) { width: 50px; height: 50px; top: 60%; right: 70%; animation-delay: 1.5s; }
@@ -1110,7 +1212,7 @@
     }
   </style>
 </head>
-<body>
+<body class="{{STYLE_CLASS}}">
 
   <!-- ═══ Hero ═══ -->
   <section class="hero">
@@ -1292,10 +1394,10 @@
   <!-- ═══ Trust Badges ═══ -->
   <section class="trust">
     <div class="trust-container reveal">
-      <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/0a3dd2175d8ecdaee24d7dead03e6602_184X52.jpeg?ver=3.12" alt="אמצעי תשלום" loading="lazy">
-      <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/9db2811d3b71b670f05c49f22937eee0_184X66.jpeg?ver=3.12" alt="אמצעי תשלום" loading="lazy">
-      <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/e8e7f7dd4e7c12e5ca09ce6a218d7e92_184X92.jpeg?ver=3.12" alt="אמצעי תשלום" loading="lazy">
-      <img src="https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/d79ca39ee4c1edf96748101f05b74eae_184X65.jpeg?ver=3.12" alt="אמצעי תשלום" loading="lazy">
+      <div class="trust-badge"><span class="dot"></span><span>טיול מודרך</span></div>
+      <div class="trust-badge"><span class="dot"></span><span>קהילת סינגלים</span></div>
+      <div class="trust-badge"><span class="dot"></span><span>צילומים מקצועיים</span></div>
+      <div class="trust-badge"><span class="dot"></span><span>תשלום מאובטח</span></div>
     </div>
   </section>
 

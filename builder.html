@@ -197,6 +197,44 @@
       width: 28px; height: 28px;
       border: none; padding: 0; background: none; cursor: pointer;
     }
+    .style-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 10px 0 16px;
+      align-items: stretch;
+    }
+    .style-row .label { font-size: 0.85rem; color: #555; margin-inline-end: 4px; padding-top: 10px; }
+    .style-chip {
+      min-width: 180px;
+      max-width: 220px;
+      padding: 10px 12px;
+      border: 1px solid #ccd;
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+    .style-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    .style-chip.active {
+      border-color: #222;
+      box-shadow: 0 0 0 2px rgba(34,34,34,0.08);
+    }
+    .style-chip strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.92rem;
+      color: #222;
+    }
+    .style-chip span {
+      display: block;
+      font-size: 0.78rem;
+      color: #666;
+      line-height: 1.45;
+    }
   </style>
 </head>
 <body>
@@ -228,6 +266,11 @@
         <input type="color" id="customAccent"  value="#f0c27f" aria-label="accent">
         <button class="secondary" id="customApply" style="padding:4px 8px;font-size:0.78rem">Use</button>
       </div>
+    </div>
+
+    <div class="style-row" id="styles">
+      <span class="label">Style:</span>
+      <!-- styles injected by JS -->
     </div>
 
     <details class="texts" id="rotationsPanel">
@@ -301,6 +344,21 @@
     { name: 'Sunset',         primary: '#c53030', primaryDark: '#8b2020', accent: '#f6ad55', accentDark: '#d4873a' },
   ];
   let activePalette = PALETTES[0];
+  const STYLES = [
+    { name: 'Editorial', className: 'style-editorial', hint: 'clean premium layout, source photos lead the page' },
+    { name: 'Trail Cards', className: 'style-trail-cards', hint: 'warmer cards and softer travel-club energy' },
+    { name: 'Bold Poster', className: 'style-bold-poster', hint: 'big typography, stronger sections, more campaign feel' },
+    {
+      name: 'Dreamscape',
+      className: 'style-dreamscape',
+      hint: 'creative mode with alternate hero scenes instead of source-only photos',
+      imageOverrides: {
+        hero: 'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/19aee3702e9ac6ce5eaeaad05fb4f948.jpeg?maxWidth=1400',
+        registration: 'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/4ca5131b8ca56a4e450feb73802fc274.jpeg?maxWidth=1400',
+      }
+    },
+  ];
+  let activeStyle = STYLES[0];
 
   function renderPaletteRow() {
     const row = document.getElementById('palettes');
@@ -323,6 +381,25 @@
     });
   }
 
+  function renderStyleRow() {
+    const row = document.getElementById('styles');
+    STYLES.forEach(style => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'style-chip' + (style === activeStyle ? ' active' : '');
+      el.innerHTML = '<strong>' + style.name + '</strong><span>' + style.hint + '</span>';
+      el.addEventListener('click', () => {
+        activeStyle = style;
+        row.querySelectorAll('.style-chip').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        if (window.__lastSrc) generate();
+      });
+      row.appendChild(el);
+    });
+  }
+
+  const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23513f83'/%3E%3Cstop offset='1' stop-color='%23f0c27f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='800' fill='url(%23g)'/%3E%3Ccircle cx='980' cy='170' r='130' fill='rgba(255,255,255,0.18)'/%3E%3Ccircle cx='210' cy='610' r='180' fill='rgba(255,255,255,0.12)'/%3E%3Cpath d='M0 610 C210 520 390 720 600 650 C780 590 950 420 1200 520 L1200 800 L0 800 Z' fill='rgba(26,26,46,0.28)'/%3E%3C/svg%3E";
+
   // ── Defaults used when extraction can't find a value (kept generic, not dating-specific) ──
   const DEFAULTS = {
     TRIP_NAME:   'נחל',
@@ -332,8 +409,9 @@
     START_TIME:  '08:00',
     END_TIME:    '14:00',
     DISTANCE:    'כ-3 קילומטרים',
-    HERO_IMAGE:  'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/19aee3702e9ac6ce5eaeaad05fb4f948.jpeg?maxWidth=1400',
-    INFO_IMAGE:  'https://images.ravpages.co.il/xsite_resources/user_content/df/9e/99/ea/df9e99ea4e3b5da1ad51b50f1c3f827f/images/c923808c4808f26f60b5244ff2476ca6_450X441.jpeg?ver=3.12',
+    HERO_IMAGE:  FALLBACK_IMAGE,
+    INFO_IMAGE:  FALLBACK_IMAGE,
+    REGISTRATION_IMAGE: FALLBACK_IMAGE,
     // Editable text — extraction will fill these from the source page; otherwise:
     PAGE_TITLE:           'טיול | Gal Travels',
     PAGE_DESCRIPTION:     'הצטרפו לטיול עם Gal Travels.',
@@ -387,6 +465,7 @@
     cfg.ACCENT_DARK   = activePalette.accentDark;
     cfg.PRIMARY_RGB   = hexToRgb(activePalette.primary);
     cfg.ACCENT_RGB    = hexToRgb(activePalette.accent);
+    cfg.STYLE_CLASS   = activeStyle.className;
 
     // Apply AI extras first (if AI was run)
     const ai = window.__aiExtras;
@@ -428,7 +507,15 @@
         const infoFromAI = (!excluded.has(ai.INFO_IMAGE) && imageKey(ai.INFO_IMAGE) !== heroK)
           ? ai.INFO_IMAGE : '';
         const altImage = allImages.find(u => imageKey(u) !== heroK);
-        cfg.INFO_IMAGE = infoFromAI || altImage || DEFAULTS.INFO_IMAGE;
+        const regImage = allImages.find(u => imageKey(u) !== heroK && imageKey(u) !== imageKey(infoFromAI || altImage || ''));
+        cfg.INFO_IMAGE = infoFromAI || altImage || cfg.HERO_IMAGE;
+        cfg.REGISTRATION_IMAGE = regImage || cfg.INFO_IMAGE || cfg.HERO_IMAGE;
+      }
+      cfg.INFO_IMAGE = cfg.INFO_IMAGE || cfg.HERO_IMAGE;
+      cfg.REGISTRATION_IMAGE = cfg.REGISTRATION_IMAGE || cfg.INFO_IMAGE || cfg.HERO_IMAGE;
+      if (activeStyle.imageOverrides) {
+        cfg.HERO_IMAGE = activeStyle.imageOverrides.hero || cfg.HERO_IMAGE;
+        cfg.REGISTRATION_IMAGE = activeStyle.imageOverrides.registration || cfg.REGISTRATION_IMAGE;
       }
       // Gallery gets every image NOT already used in hero/info (compared by
       // canonical key, so size variants don't slip through).
@@ -510,16 +597,24 @@
     if (pickedImages.heroImage) {
       cfg.HERO_IMAGE = pickedImages.heroImage;
       cfg.INFO_IMAGE = pickedImages.infoImage || pickedImages.heroImage;
+      cfg.REGISTRATION_IMAGE = pickedImages.registrationImage || cfg.INFO_IMAGE || cfg.HERO_IMAGE;
       log('hero image ← source images', 'ok');
     } else {
       const ogImg = safeUrl(doc.querySelector('meta[property="og:image"]')?.getAttribute('content'));
       if (ogImg) {
         cfg.HERO_IMAGE = ogImg;
         cfg.INFO_IMAGE = ogImg;
+        cfg.REGISTRATION_IMAGE = ogImg;
         log('hero image ← og:image', 'ok');
       } else {
         log('hero image not found — using defaults', 'warn');
       }
+    }
+    cfg.INFO_IMAGE = cfg.INFO_IMAGE || cfg.HERO_IMAGE;
+    cfg.REGISTRATION_IMAGE = cfg.REGISTRATION_IMAGE || cfg.INFO_IMAGE || cfg.HERO_IMAGE;
+    if (activeStyle.imageOverrides) {
+      cfg.HERO_IMAGE = activeStyle.imageOverrides.hero || cfg.HERO_IMAGE;
+      cfg.REGISTRATION_IMAGE = activeStyle.imageOverrides.registration || cfg.REGISTRATION_IMAGE;
     }
 
     // Payment links (Green Invoice or ravpage checkout)
@@ -949,7 +1044,11 @@
     const allImages = collectCandidateImages(doc);
     const heroImage = allImages[0] || null;
     const infoImage = allImages.find(u => imageKey(u) !== imageKey(heroImage)) || heroImage;
-    return { allImages, heroImage, infoImage };
+    const registrationImage = allImages.find(u => {
+      const key = imageKey(u);
+      return key !== imageKey(heroImage) && key !== imageKey(infoImage);
+    }) || infoImage || heroImage;
+    return { allImages, heroImage, infoImage, registrationImage };
   }
 
   // Map AI JSON → form fields (texts panel) and prices/links/colors via cfg
@@ -1053,6 +1152,7 @@
   });
 
   renderPaletteRow();
+  renderStyleRow();
 })();
 </script>
 </body>
