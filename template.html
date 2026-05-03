@@ -154,8 +154,15 @@
     .hero-bg {
       position: absolute;
       inset: 0;
-      background: url('{{HERO_IMAGE}}') center/cover no-repeat;
       z-index: 0;
+      overflow: hidden;
+    }
+    .hero-bg img {
+      position: absolute;
+      inset: -8%;
+      width: 116%;
+      height: 116%;
+      object-fit: cover;
       image-orientation: from-image;       /* respect EXIF rotation on phone photos */
       transform: translateY(var(--hero-parallax)) rotate(var(--hero-rotate)) scale(var(--hero-scale));
       transform-origin: center;
@@ -532,11 +539,17 @@
     }
     .registration-bg {
       position: absolute;
-      inset: -50%;
-      width: 200%;
-      height: 200%;
-      background: url('{{REGISTRATION_IMAGE}}') center/cover no-repeat;
+      inset: 0;
       z-index: 0;
+      overflow: hidden;
+    }
+    .registration-bg img {
+      position: absolute;
+      inset: -14%;
+      width: 128%;
+      height: 128%;
+      object-fit: cover;
+      image-orientation: from-image;
       transform: rotate(calc(90deg + var(--registration-rotate)));
       transform-origin: center;
     }
@@ -1107,6 +1120,10 @@
         radial-gradient(circle at 82% 18%, rgba(255,255,255,0.18), transparent 20%),
         linear-gradient(140deg, rgba({{PRIMARY_RGB}},0.96) 0%, rgba(26,26,46,0.98) 55%, rgba({{ACCENT_RGB}},0.82) 100%);
     }
+    body.style-graphics-only .hero-bg img,
+    body.style-graphics-only .registration-bg img {
+      display: none;
+    }
     body.style-graphics-only .hero-bg::before,
     body.style-graphics-only .registration-bg::before {
       content: '';
@@ -1268,7 +1285,9 @@
 
   <!-- ═══ Hero ═══ -->
   <section class="hero">
-    <div class="hero-bg"></div>
+    <div class="hero-bg">
+      <img src="{{HERO_IMAGE}}" alt="{{TRIP_NAME}}" loading="eager">
+    </div>
     <div class="particles">
       <div class="particle"></div>
       <div class="particle"></div>
@@ -1371,7 +1390,9 @@
 
   <!-- ═══ Registration ═══ -->
   <section class="registration" id="register">
-    <div class="registration-bg"></div>
+    <div class="registration-bg">
+      <img src="{{REGISTRATION_IMAGE}}" alt="{{TRIP_NAME}}" loading="lazy">
+    </div>
     <div class="registration-content">
       <h2>{{REGISTRATION_HEADLINE}}</h2>
       <div class="age-badge">גילאי {{AGE_RANGE}}</div>
