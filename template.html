@@ -52,6 +52,13 @@
       --text: #2d2d2d;
       --radius: 16px;
       --shadow: 0 8px 32px rgba(0,0,0,0.12);
+      --hero-rotate: 0deg;
+      --info-rotate: 0deg;
+      --registration-rotate: 0deg;
+      --hero-scale: 1;
+      --info-max-width: 100%;
+      --gallery-max-width: 920px;
+      --hero-parallax: 0px;
     }
 
     html { scroll-behavior: smooth; }
@@ -150,6 +157,8 @@
       background: url('{{HERO_IMAGE}}') center/cover no-repeat;
       z-index: 0;
       image-orientation: from-image;       /* respect EXIF rotation on phone photos */
+      transform: translateY(var(--hero-parallax)) rotate(var(--hero-rotate)) scale(var(--hero-scale));
+      transform-origin: center;
     }
     .hero-bg::after {
       content: '';
@@ -265,14 +274,18 @@
       overflow: hidden;
       box-shadow: var(--shadow);
       position: relative;
+      width: min(100%, var(--info-max-width));
+      margin-inline: auto;
     }
     .info-image img {
       width: 100%;
       height: auto;
       display: block;
       transition: transform 0.6s ease;
+      transform: rotate(var(--info-rotate));
+      transform-origin: center;
     }
-    .info-image:hover img { transform: scale(1.03); }
+    .info-image:hover img { transform: rotate(var(--info-rotate)) scale(1.03); }
 
     .info-text h3 {
       font-size: 2rem;
@@ -485,11 +498,12 @@
       align-items: start;
       max-width: 520px;
       margin: 0 auto;
+      width: min(100%, var(--gallery-max-width));
     }
     @media (min-width: 820px) {
       .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
-        max-width: 920px;
+        max-width: var(--gallery-max-width);
       }
     }
     .gallery-item {
@@ -522,8 +536,9 @@
       width: 200%;
       height: 200%;
       background: url('{{REGISTRATION_IMAGE}}') center/cover no-repeat;
-      transform: rotate(90deg);
       z-index: 0;
+      transform: rotate(calc(90deg + var(--registration-rotate)));
+      transform-origin: center;
     }
     .registration-bg::after {
       content: '';
@@ -1084,6 +1099,43 @@
       border-radius: 28px;
       box-shadow: 0 22px 46px rgba(22, 15, 32, 0.16);
     }
+
+    body.style-graphics-only .hero-bg,
+    body.style-graphics-only .registration-bg {
+      background:
+        radial-gradient(circle at 18% 24%, rgba({{ACCENT_RGB}},0.42), transparent 24%),
+        radial-gradient(circle at 82% 18%, rgba(255,255,255,0.18), transparent 20%),
+        linear-gradient(140deg, rgba({{PRIMARY_RGB}},0.96) 0%, rgba(26,26,46,0.98) 55%, rgba({{ACCENT_RGB}},0.82) 100%);
+    }
+    body.style-graphics-only .hero-bg::before,
+    body.style-graphics-only .registration-bg::before {
+      content: '';
+      position: absolute;
+      inset: 12%;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 34px;
+    }
+    body.style-graphics-only .info-container {
+      grid-template-columns: 1fr;
+      max-width: 760px;
+    }
+    body.style-graphics-only .info-image,
+    body.style-graphics-only .gallery {
+      display: none;
+    }
+    body.style-graphics-only .info,
+    body.style-graphics-only .pricing,
+    body.style-graphics-only .policy {
+      background:
+        radial-gradient(circle at top right, rgba({{ACCENT_RGB}},0.12), transparent 24%),
+        linear-gradient(180deg, #fcfbfd 0%, #f4f0f7 100%);
+    }
+    body.style-graphics-only .detail-card,
+    body.style-graphics-only .price-card,
+    body.style-graphics-only .policy details {
+      border-radius: 28px;
+      box-shadow: 0 18px 40px rgba(23, 18, 32, 0.08);
+    }
     .particle:nth-child(1) { width: 80px; height: 80px; top: 20%; right: 10%; animation-delay: 0s; }
     .particle:nth-child(2) { width: 50px; height: 50px; top: 60%; right: 70%; animation-delay: 1.5s; }
     .particle:nth-child(3) { width: 120px; height: 120px; top: 10%; right: 60%; animation-delay: 3s; animation-duration: 8s; }
@@ -1597,8 +1649,8 @@
         requestAnimationFrame(() => {
           const scrolled = window.pageYOffset;
           const heroBg = document.querySelector('.hero-bg');
-          if (heroBg && scrolled < window.innerHeight) {
-            heroBg.style.transform = `translateY(${scrolled * 0.4}px)`;
+          if (heroBg) {
+            heroBg.style.setProperty('--hero-parallax', scrolled < window.innerHeight ? `${scrolled * 0.4}px` : '0px');
           }
           // Show fixed CTA after hero, hide when at registration
           const fixedCta = document.getElementById('fixedCta');

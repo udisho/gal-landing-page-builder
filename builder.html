@@ -273,6 +273,24 @@
       <!-- styles injected by JS -->
     </div>
 
+    <details class="texts" open id="visualPanel">
+      <summary>Visual controls</summary>
+      <div class="grid">
+        <label><span class="lbl">Hero rotation (deg)</span>
+          <input id="heroRotation" type="number" value="0" step="1"></label>
+        <label><span class="lbl">Info rotation (deg)</span>
+          <input id="infoRotation" type="number" value="0" step="1"></label>
+        <label><span class="lbl">Registration rotation (deg)</span>
+          <input id="registrationRotation" type="number" value="0" step="1"></label>
+        <label><span class="lbl">Hero zoom (%)</span>
+          <input id="heroZoom" type="number" value="100" min="60" max="160" step="1"></label>
+        <label><span class="lbl">Info image width (%)</span>
+          <input id="infoWidth" type="number" value="100" min="45" max="100" step="1"></label>
+        <label><span class="lbl">Gallery width (%)</span>
+          <input id="galleryWidth" type="number" value="100" min="45" max="100" step="1"></label>
+      </div>
+    </details>
+
     <details class="texts" id="rotationsPanel">
       <summary>Image rotations &amp; exclusions (only if some photos look wrong)</summary>
       <div class="grid">
@@ -316,6 +334,7 @@
       <button class="primary"   id="genBtn">Generate</button>
       <button class="secondary" id="dlBtn"  disabled>Download .html</button>
       <button class="secondary" id="cpBtn"  disabled>Copy HTML</button>
+      <button class="secondary" id="resetStateBtn">Reset builder state</button>
     </div>
 
     <div id="log"></div>
@@ -328,6 +347,7 @@
   const $  = s => document.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
   const logEl = $('#log');
+  const STATE_KEY = 'galBuilderStateV1';
   const log = (m, c = '') => {
     const el = document.createElement('div');
     el.className = c; el.textContent = '• ' + m;
@@ -348,6 +368,7 @@
     { name: 'Editorial', className: 'style-editorial', hint: 'clean premium layout, source photos lead the page' },
     { name: 'Trail Cards', className: 'style-trail-cards', hint: 'warmer cards and softer travel-club energy' },
     { name: 'Bold Poster', className: 'style-bold-poster', hint: 'big typography, stronger sections, more campaign feel' },
+    { name: 'Graphics Only', className: 'style-graphics-only', hint: 'no photos, just designed gradients and shapes' },
     {
       name: 'Dreamscape',
       className: 'style-dreamscape',
@@ -374,6 +395,7 @@
         // refresh selection state
         row.querySelectorAll('.palette').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
+        saveState();
         // If a preview exists, regenerate automatically so Gal sees instant color change
         if (window.__lastSrc) generate();
       });
@@ -392,10 +414,112 @@
         activeStyle = style;
         row.querySelectorAll('.style-chip').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
+        saveState();
         if (window.__lastSrc) generate();
       });
       row.appendChild(el);
     });
+  }
+
+  function clampNum(v, min, max, fallback) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+  }
+
+  function readVisualSettings() {
+    return {
+      heroRotation: clampNum($('#heroRotation')?.value, -180, 180, 0),
+      infoRotation: clampNum($('#infoRotation')?.value, -180, 180, 0),
+      registrationRotation: clampNum($('#registrationRotation')?.value, -180, 180, 0),
+      heroZoom: clampNum($('#heroZoom')?.value, 60, 160, 100),
+      infoWidth: clampNum($('#infoWidth')?.value, 45, 100, 100),
+      galleryWidth: clampNum($('#galleryWidth')?.value, 45, 100, 100),
+    };
+  }
+
+  function applyVisualSettings(values = {}) {
+    $('#heroRotation').value = clampNum(values.heroRotation, -180, 180, 0);
+    $('#infoRotation').value = clampNum(values.infoRotation, -180, 180, 0);
+    $('#registrationRotation').value = clampNum(values.registrationRotation, -180, 180, 0);
+    $('#heroZoom').value = clampNum(values.heroZoom, 60, 160, 100);
+    $('#infoWidth').value = clampNum(values.infoWidth, 45, 100, 100);
+    $('#galleryWidth').value = clampNum(values.galleryWidth, 45, 100, 100);
+  }
+
+  function collectState() {
+    const textValues = {};
+    TEXT_TOKENS.forEach(k => {
+      const el = document.getElementById('t_' + k);
+      textValues[k] = el ? el.value : '';
+    });
+    return {
+      src: $('#src').value,
+      styleClass: activeStyle.className,
+      palette: {
+        name: activePalette.name,
+        primary: activePalette.primary,
+        primaryDark: activePalette.primaryDark,
+        accent: activePalette.accent,
+        accentDark: activePalette.accentDark,
+      },
+      customPrimary: $('#customPrimary').value,
+      customAccent: $('#customAccent').value,
+      textValues,
+      rotationsList: $('#rotationsList').value,
+      excludeList: $('#excludeList').value,
+      visualSettings: readVisualSettings(),
+    };
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STATE_KEY, JSON.stringify(collectState()));
+    } catch {}
+  }
+
+  let rerenderTimer = null;
+  function rerenderIfReady() {
+    saveState();
+    if (!$('#src').value.trim()) return;
+    clearTimeout(rerenderTimer);
+    rerenderTimer = setTimeout(() => generate(), 120);
+  }
+
+  function restoreState() {
+    let raw = null;
+    try {
+      raw = localStorage.getItem(STATE_KEY);
+    } catch {}
+    if (!raw) return;
+    try {
+      const state = JSON.parse(raw);
+      if (state.palette && state.palette.primary && state.palette.accent) {
+        const preset = PALETTES.find(p =>
+          p.primary === state.palette.primary &&
+          p.accent === state.palette.accent &&
+          p.primaryDark === state.palette.primaryDark &&
+          p.accentDark === state.palette.accentDark
+        );
+        activePalette = preset || state.palette;
+      }
+      if (state.styleClass) {
+        const presetStyle = STYLES.find(s => s.className === state.styleClass);
+        if (presetStyle) activeStyle = presetStyle;
+      }
+      if (state.customPrimary) $('#customPrimary').value = state.customPrimary;
+      if (state.customAccent) $('#customAccent').value = state.customAccent;
+      if (typeof state.src === 'string') $('#src').value = state.src;
+      if (state.textValues) {
+        Object.entries(state.textValues).forEach(([k, v]) => {
+          const el = document.getElementById('t_' + k);
+          if (el && typeof v === 'string') el.value = v;
+        });
+      }
+      $('#rotationsList').value = state.rotationsList || '';
+      $('#excludeList').value = state.excludeList || '';
+      applyVisualSettings(state.visualSettings || {});
+    } catch {}
   }
 
   const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23513f83'/%3E%3Cstop offset='1' stop-color='%23f0c27f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='800' fill='url(%23g)'/%3E%3Ccircle cx='980' cy='170' r='130' fill='rgba(255,255,255,0.18)'/%3E%3Ccircle cx='210' cy='610' r='180' fill='rgba(255,255,255,0.12)'/%3E%3Cpath d='M0 610 C210 520 390 720 600 650 C780 590 950 420 1200 520 L1200 800 L0 800 Z' fill='rgba(26,26,46,0.28)'/%3E%3C/svg%3E";
@@ -459,6 +583,7 @@
   // ── Build config: AI results take precedence, regex fallback fills gaps ──
   function extractConfig(src) {
     const cfg = { ...DEFAULTS };
+    const visuals = readVisualSettings();
     cfg.PRIMARY_COLOR = activePalette.primary;
     cfg.PRIMARY_DARK  = activePalette.primaryDark;
     cfg.ACCENT_COLOR  = activePalette.accent;
@@ -529,12 +654,12 @@
       cfg.REVIEWS_HTML       = buildReviewsHTML(galleryImages, rotations);
       // If the chosen hero image has a rotation override, inject CSS so the
       // hero background renders rotated. Same for info-image.
-      let extraCSS = '';
-      if (cfg.HERO_IMAGE && rotations[cfg.HERO_IMAGE]) {
-        extraCSS += '.hero-bg{transform:rotate(' + rotations[cfg.HERO_IMAGE] + 'deg);transform-origin:center;}';
-      }
-      if (cfg.INFO_IMAGE && rotations[cfg.INFO_IMAGE]) {
-        extraCSS += '.info-image img{transform:rotate(' + rotations[cfg.INFO_IMAGE] + 'deg);}';
+      let extraCSS = buildVisualCSS(cfg, visuals, rotations);
+      if (activeStyle.className === 'style-graphics-only') {
+        cfg.HERO_IMAGE = FALLBACK_IMAGE;
+        cfg.INFO_IMAGE = FALLBACK_IMAGE;
+        cfg.REGISTRATION_IMAGE = FALLBACK_IMAGE;
+        cfg.REVIEWS_HTML = '';
       }
       cfg.EXTRA_CSS = extraCSS ? '<style>' + extraCSS + '</style>' : '';
       // AI handled everything; skip the regex fallback to avoid overwrites
@@ -616,6 +741,12 @@
       cfg.HERO_IMAGE = activeStyle.imageOverrides.hero || cfg.HERO_IMAGE;
       cfg.REGISTRATION_IMAGE = activeStyle.imageOverrides.registration || cfg.REGISTRATION_IMAGE;
     }
+    if (activeStyle.className === 'style-graphics-only') {
+      cfg.HERO_IMAGE = FALLBACK_IMAGE;
+      cfg.INFO_IMAGE = FALLBACK_IMAGE;
+      cfg.REGISTRATION_IMAGE = FALLBACK_IMAGE;
+      cfg.REVIEWS_HTML = '';
+    }
 
     // Payment links (Green Invoice or ravpage checkout)
     const links = Array.from(doc.querySelectorAll('a[href*="greeninvoice.co.il"],a[href*="sub.ravpage"],a[href*="ravpage.co.il/subscribe"]'));
@@ -680,7 +811,23 @@
     const dist = text.match(/(?:כ-)?\s?\d[\d\s\-]{0,5}\s?(?:קילומטר(?:ים)?|ק["״]?ם)/);
     if (dist) cfg.DISTANCE = dist[0].trim();
 
+    cfg.EXTRA_CSS = '<style>' + buildVisualCSS(cfg, visuals, {}) + '</style>';
     return cfg;
+  }
+
+  function buildVisualCSS(cfg, visuals, rotations) {
+    const heroRotate = (rotations[cfg.HERO_IMAGE] ?? visuals.heroRotation) || 0;
+    const infoRotate = (rotations[cfg.INFO_IMAGE] ?? visuals.infoRotation) || 0;
+    const registrationRotate = (rotations[cfg.REGISTRATION_IMAGE] ?? visuals.registrationRotation) || 0;
+    const galleryMax = Math.round(1040 * (visuals.galleryWidth / 100));
+    return ':root{' +
+      '--hero-rotate:' + heroRotate + 'deg;' +
+      '--info-rotate:' + infoRotate + 'deg;' +
+      '--registration-rotate:' + registrationRotate + 'deg;' +
+      '--hero-scale:' + (visuals.heroZoom / 100).toFixed(2) + ';' +
+      '--info-max-width:' + visuals.infoWidth + '%;' +
+      '--gallery-max-width:' + galleryMax + 'px;' +
+      '}';
   }
 
   // ── Render template with config ──
@@ -704,6 +851,7 @@
     logEl.innerHTML = '';
     const src = $('#src').value.trim();
     if (!src) { log('Paste some HTML first.', 'warn'); return; }
+    saveState();
     const isFreshSource = src !== window.__lastSrc;
     window.__lastSrc = src;
     const btn = $('#genBtn');
@@ -730,6 +878,7 @@
   $('#genBtn').addEventListener('click', generate);
   $('#dlBtn').addEventListener('click', () => {
     if (!lastHTML) return;
+    saveState();
     const blob = new Blob([lastHTML], { type: 'text/html;charset=utf-8' });
     const url  = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -739,8 +888,13 @@
   });
   $('#cpBtn').addEventListener('click', async () => {
     if (!lastHTML) return;
+    saveState();
     try { await navigator.clipboard.writeText(lastHTML); log('copied', 'ok'); }
     catch (e) { log('copy failed: ' + e.message, 'err'); }
+  });
+  $('#resetStateBtn').addEventListener('click', () => {
+    try { localStorage.removeItem(STATE_KEY); } catch {}
+    window.location.reload();
   });
 
   // ── Bookmarklet generation ──
@@ -757,6 +911,7 @@
       const html = window.name.slice('[GAL_HTML]'.length);
       window.name = '';
       $('#src').value = html;
+      saveState();
       log('HTML received from bookmarklet (' + html.length + ' bytes)', 'ok');
       // If a key is set, auto-trigger AI extraction
       if (localStorage.getItem('geminiKey')) {
@@ -1117,6 +1272,7 @@
       log('asking Gemini…');
       const j = await aiExtract(src);
       applyAIResult(j);
+      saveState();
       log('AI extraction done — review fields and Generate', 'ok');
     } catch (e) {
       log('AI failed: ' + e.message, 'err');
@@ -1128,7 +1284,7 @@
 
   // If user manually edits the source area, drop stale AI results so the next
   // Generate doesn't reuse them.
-  $('#src').addEventListener('input', () => { window.__aiExtras = null; });
+  $('#src').addEventListener('input', () => { window.__aiExtras = null; saveState(); });
 
   // Custom-color picker: derive darker shades by darkening ~20%
   function darken(hex, pct = 0.22) {
@@ -1148,11 +1304,32 @@
     };
     document.querySelectorAll('#palettes .palette').forEach(n => n.classList.remove('active'));
     log('custom palette applied', 'ok');
+    saveState();
     if (window.__lastSrc) generate();
   });
 
+  applyVisualSettings();
+  restoreState();
   renderPaletteRow();
   renderStyleRow();
+  [
+    '#customPrimary','#customAccent','#rotationsList','#excludeList','#heroRotation',
+    '#infoRotation','#registrationRotation','#heroZoom','#infoWidth','#galleryWidth'
+  ].forEach(sel => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    el.addEventListener('input', saveState);
+    if (['#rotationsList','#excludeList','#heroRotation','#infoRotation','#registrationRotation','#heroZoom','#infoWidth','#galleryWidth'].includes(sel)) {
+      el.addEventListener('input', rerenderIfReady);
+    }
+  });
+  TEXT_TOKENS.forEach(k => {
+    const el = document.getElementById('t_' + k);
+    if (el) el.addEventListener('input', saveState);
+  });
+  if ($('#src').value.trim()) {
+    setTimeout(generate, 0);
+  }
 })();
 </script>
 </body>
