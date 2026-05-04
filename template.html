@@ -53,8 +53,16 @@
       --radius: 16px;
       --shadow: 0 8px 32px rgba(0,0,0,0.12);
       --hero-rotate: 0deg;
+      --hero-x: 0%;
+      --hero-y: 0%;
       --info-rotate: 0deg;
+      --info-scale: 1;
+      --info-x: 0%;
+      --info-y: 0%;
       --registration-rotate: 0deg;
+      --registration-scale: 1;
+      --registration-x: 0%;
+      --registration-y: 0%;
       --hero-scale: 1;
       --info-max-width: 100%;
       --gallery-max-width: 920px;
@@ -164,7 +172,7 @@
       height: 116%;
       object-fit: cover;
       image-orientation: from-image;       /* respect EXIF rotation on phone photos */
-      transform: translateY(var(--hero-parallax)) rotate(var(--hero-rotate)) scale(var(--hero-scale));
+      transform: translateY(var(--hero-parallax)) translate(var(--hero-x), var(--hero-y)) rotate(var(--hero-rotate)) scale(var(--hero-scale));
       transform-origin: center;
     }
     .hero-bg::after {
@@ -289,10 +297,10 @@
       height: auto;
       display: block;
       transition: transform 0.6s ease;
-      transform: rotate(var(--info-rotate));
+      transform: translate(var(--info-x), var(--info-y)) rotate(var(--info-rotate)) scale(var(--info-scale));
       transform-origin: center;
     }
-    .info-image:hover img { transform: rotate(var(--info-rotate)) scale(1.03); }
+    .info-image:hover img { transform: translate(var(--info-x), var(--info-y)) rotate(var(--info-rotate)) scale(calc(var(--info-scale) * 1.03)); }
 
     .info-text h3 {
       font-size: 2rem;
@@ -550,7 +558,7 @@
       height: 128%;
       object-fit: cover;
       image-orientation: from-image;
-      transform: rotate(calc(90deg + var(--registration-rotate)));
+      transform: translate(var(--registration-x), var(--registration-y)) rotate(var(--registration-rotate)) scale(var(--registration-scale));
       transform-origin: center;
     }
     .registration-bg::after {
@@ -1536,7 +1544,7 @@
       <h2>{{HERO_H2}}</h2>
       <a href="#register" class="hero-cta">
         <span class="arrow">&larr;</span>
-        הירשמו היום
+        {{HERO_CTA_TEXT}}
       </a>
     </div>
     <div class="hero-scroll">
@@ -1585,14 +1593,14 @@
   <section class="pricing" id="pricing">
     <div class="pricing-container">
       <h3 class="reveal">מחירים</h3>
-      <p class="subtitle reveal">כולל הדרכה, תמונות מקצועיות, אירגון הטיול ואוכל בבוקר</p>
+      <p class="subtitle reveal">{{PRICING_SUBTITLE}}</p>
 
       <div class="price-cards" id="priceTiers">
         <!-- Filled by JS from PRICE_CONFIG -->
       </div>
 
       <div class="price-includes reveal">
-        <p><strong>מה כלול?</strong> הדרכה, תמונות מקצועיות, אירגון הטיול, אוכל בבוקר.</p>
+        <p><strong>מה כלול?</strong> {{PRICE_INCLUDES_TEXT}}</p>
       </div>
     </div>
   </section>
@@ -1632,57 +1640,7 @@
       <h2>{{REGISTRATION_HEADLINE}}</h2>
       <div class="age-badge">גילאי {{AGE_RANGE}}</div>
 
-      <!-- Tabs (builder hides the tab whose ticket link is empty) -->
-      <div class="form-tabs">
-        <button class="form-tab active" data-target="form-women-single" data-ticket="womenSingle">{{TICKET_WS_LABEL}}</button>
-        <button class="form-tab"        data-target="form-women-couple" data-ticket="womenCouple">{{TICKET_WC_LABEL}}</button>
-        <button class="form-tab"        data-target="form-men"          data-ticket="men">{{TICKET_M_LABEL}}</button>
-      </div>
-
-      <!-- Women single -->
-      <div class="form-card active" id="form-women-single" data-ticket="womenSingle">
-        <div class="form-title">{{TICKET_WS_LABEL}}</div>
-        <div class="form-price" data-price-kind="single">—</div>
-        <label class="policy-check">
-          <input type="checkbox" class="agree" required>
-          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('cancel')">מדיניות הביטול</a></span>
-        </label>
-        <label class="policy-check">
-          <input type="checkbox" class="agree" required>
-          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('photo')">מדיניות התיעוד והצילום</a></span>
-        </label>
-        <a class="form-submit ticket-link" href="#" target="_blank" rel="noopener" aria-disabled="true">הרשמה ומעבר לתשלום</a>
-      </div>
-
-      <!-- Women couple -->
-      <div class="form-card" id="form-women-couple" data-ticket="womenCouple">
-        <div class="form-title">{{TICKET_WC_LABEL}}</div>
-        <div class="form-price" data-price-kind="couple">—</div>
-        <label class="policy-check">
-          <input type="checkbox" class="agree" required>
-          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('cancel')">מדיניות הביטול</a></span>
-        </label>
-        <label class="policy-check">
-          <input type="checkbox" class="agree" required>
-          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('photo')">מדיניות התיעוד והצילום</a></span>
-        </label>
-        <a class="form-submit ticket-link" href="#" target="_blank" rel="noopener" aria-disabled="true">הרשמה ומעבר לתשלום</a>
-      </div>
-
-      <!-- Men -->
-      <div class="form-card" id="form-men" data-ticket="men">
-        <div class="form-title">{{TICKET_M_LABEL}}</div>
-        <div class="form-price" data-price-kind="single">—</div>
-        <label class="policy-check">
-          <input type="checkbox" class="agree" required>
-          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('cancel')">מדיניות הביטול</a></span>
-        </label>
-        <label class="policy-check">
-          <input type="checkbox" class="agree" required>
-          <span>קראתי ואני מסכים/ה ל<a onclick="openModal('photo')">מדיניות התיעוד והצילום</a></span>
-        </label>
-        <a class="form-submit ticket-link" href="#" target="_blank" rel="noopener" aria-disabled="true">הרשמה ומעבר לתשלום</a>
-      </div>
+      {{REGISTRATION_FORMS_HTML}}
 
       <!-- Social Links -->
       <div class="social-links reveal">
@@ -1719,7 +1677,7 @@
 
   <!-- ═══ Fixed Bottom CTA ═══ -->
   <div class="fixed-bottom-cta" id="fixedCta">
-    <a href="#register">הרשמה ומעבר לתשלום</a>
+    <a href="#register">{{FORM_SUBMIT_TEXT}}</a>
   </div>
 
   <!-- ═══ Policy Modals ═══ -->
@@ -1927,13 +1885,16 @@
       }
     });
 
-    // ── Smooth reveal for men's sold-out tab ──
-    document.querySelector('.form-tab.disabled').addEventListener('click', () => {
-      document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.form-card').forEach(f => f.classList.remove('active'));
-      document.querySelector('.form-tab.disabled').classList.add('active');
-      document.getElementById('form-men').classList.add('active');
-    });
+    const disabledTab = document.querySelector('.form-tab.disabled');
+    if (disabledTab) {
+      disabledTab.addEventListener('click', () => {
+        document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-card').forEach(f => f.classList.remove('active'));
+        disabledTab.classList.add('active');
+        const target = document.getElementById(disabledTab.dataset.target);
+        if (target) target.classList.add('active');
+      });
+    }
   </script>
 </body>
 </html>

@@ -291,10 +291,26 @@
           <input id="registrationRotation" type="number" value="0" step="1"></label>
         <label><span class="lbl">Hero zoom (%)</span>
           <input id="heroZoom" type="number" value="100" min="60" max="160" step="1"></label>
+        <label><span class="lbl">Hero X offset (%)</span>
+          <input id="heroX" type="number" value="0" min="-50" max="50" step="1"></label>
+        <label><span class="lbl">Hero Y offset (%)</span>
+          <input id="heroY" type="number" value="0" min="-50" max="50" step="1"></label>
         <label><span class="lbl">Info image width (%)</span>
           <input id="infoWidth" type="number" value="100" min="45" max="100" step="1"></label>
+        <label><span class="lbl">Info image scale (%)</span>
+          <input id="infoScale" type="number" value="100" min="50" max="150" step="1"></label>
+        <label><span class="lbl">Info X offset (%)</span>
+          <input id="infoX" type="number" value="0" min="-50" max="50" step="1"></label>
+        <label><span class="lbl">Info Y offset (%)</span>
+          <input id="infoY" type="number" value="0" min="-50" max="50" step="1"></label>
         <label><span class="lbl">Gallery width (%)</span>
           <input id="galleryWidth" type="number" value="100" min="45" max="100" step="1"></label>
+        <label><span class="lbl">Registration image scale (%)</span>
+          <input id="registrationScale" type="number" value="100" min="50" max="180" step="1"></label>
+        <label><span class="lbl">Registration X offset (%)</span>
+          <input id="registrationX" type="number" value="0" min="-50" max="50" step="1"></label>
+        <label><span class="lbl">Registration Y offset (%)</span>
+          <input id="registrationY" type="number" value="0" min="-50" max="50" step="1"></label>
       </div>
     </details>
 
@@ -319,12 +335,20 @@
           <input id="t_HERO_H2"></label>
         <label><span class="lbl">Hero badge (small pill)</span>
           <input id="t_HERO_BADGE"></label>
+        <label><span class="lbl">Hero CTA button</span>
+          <input id="t_HERO_CTA_TEXT"></label>
         <label><span class="lbl">Registration headline</span>
           <input id="t_REGISTRATION_HEADLINE"></label>
         <label><span class="lbl">Info section headline</span>
           <input id="t_INFO_HEADLINE"></label>
         <label class="full"><span class="lbl">Info lead paragraph</span>
           <textarea id="t_INFO_LEAD"></textarea></label>
+        <label class="full"><span class="lbl">Pricing subtitle</span>
+          <input id="t_PRICING_SUBTITLE"></label>
+        <label class="full"><span class="lbl">What is included line</span>
+          <input id="t_PRICE_INCLUDES_TEXT"></label>
+        <label><span class="lbl">Payment button text</span>
+          <input id="t_FORM_SUBMIT_TEXT"></label>
         <label><span class="lbl">Ticket label — single (women)</span>
           <input id="t_TICKET_WS_LABEL"></label>
         <label><span class="lbl">Ticket label — couple</span>
@@ -375,7 +399,11 @@
     singles: {
       HERO_BADGE: 'Gal Travels',
       HERO_H2: 'מקומות מוגבלים — הירשמו עוד היום',
+      HERO_CTA_TEXT: 'להירשם לטיול',
       INFO_LEAD: 'הצטרפו אלינו לטיול בגילאי {{AGE_RANGE}} — באווירה נינוחה וטבעית.',
+      PRICING_SUBTITLE: 'כולל הדרכה, תמונות מקצועיות, ארגון הטיול ואוכל בבוקר',
+      PRICE_INCLUDES_TEXT: 'הדרכה, תמונות מקצועיות, ארגון הטיול, אוכל בבוקר.',
+      FORM_SUBMIT_TEXT: 'הרשמה ומעבר לתשלום',
       TICKET_WS_LABEL: 'כרטיס יחיד',
       TICKET_WC_LABEL: 'כרטיס זוגי',
       TICKET_M_LABEL: 'כרטיס נוסף',
@@ -384,7 +412,11 @@
     women: {
       HERO_BADGE: 'Gal Travels',
       HERO_H2: 'יום טבע נשי ומדויק — הירשמו עוד היום',
+      HERO_CTA_TEXT: 'להירשם לטיול',
       INFO_LEAD: 'הצטרפו אלינו לטיול נשי בגילאי {{AGE_RANGE}} — באווירה נינוחה וטבעית.',
+      PRICING_SUBTITLE: 'כולל הדרכה, ארגון הטיול, תמונות מקצועיות ואוכל בבוקר',
+      PRICE_INCLUDES_TEXT: 'הדרכה, ארגון הטיול, תמונות מקצועיות, אוכל בבוקר.',
+      FORM_SUBMIT_TEXT: 'הרשמה ומעבר לתשלום',
       TICKET_WS_LABEL: 'הרשמה לטיול',
       TICKET_WC_LABEL: 'הרשמה זוגית',
       TICKET_M_LABEL: 'מקום נוסף',
@@ -393,7 +425,11 @@
     open: {
       HERO_BADGE: 'Gal Travels',
       HERO_H2: 'הירשמו לטיול הקרוב וצאו לשטח',
+      HERO_CTA_TEXT: 'להירשם לטיול',
       INFO_LEAD: 'הצטרפו אלינו לטיול בגילאי {{AGE_RANGE}} — באווירה נעימה ובטבע.',
+      PRICING_SUBTITLE: 'כולל הדרכה, ארגון הטיול, תמונות מקצועיות ואוכל בבוקר',
+      PRICE_INCLUDES_TEXT: 'הדרכה, ארגון הטיול, תמונות מקצועיות, אוכל בבוקר.',
+      FORM_SUBMIT_TEXT: 'הרשמה ומעבר לתשלום',
       TICKET_WS_LABEL: 'הרשמה',
       TICKET_WC_LABEL: 'הרשמה זוגית',
       TICKET_M_LABEL: 'מקום נוסף',
@@ -481,8 +517,16 @@
       infoRotation: clampNum($('#infoRotation')?.value, -180, 180, 0),
       registrationRotation: clampNum($('#registrationRotation')?.value, -180, 180, 0),
       heroZoom: clampNum($('#heroZoom')?.value, 60, 160, 100),
+      heroX: clampNum($('#heroX')?.value, -50, 50, 0),
+      heroY: clampNum($('#heroY')?.value, -50, 50, 0),
       infoWidth: clampNum($('#infoWidth')?.value, 45, 100, 100),
+      infoScale: clampNum($('#infoScale')?.value, 50, 150, 100),
+      infoX: clampNum($('#infoX')?.value, -50, 50, 0),
+      infoY: clampNum($('#infoY')?.value, -50, 50, 0),
       galleryWidth: clampNum($('#galleryWidth')?.value, 45, 100, 100),
+      registrationScale: clampNum($('#registrationScale')?.value, 50, 180, 100),
+      registrationX: clampNum($('#registrationX')?.value, -50, 50, 0),
+      registrationY: clampNum($('#registrationY')?.value, -50, 50, 0),
     };
   }
 
@@ -491,8 +535,16 @@
     $('#infoRotation').value = clampNum(values.infoRotation, -180, 180, 0);
     $('#registrationRotation').value = clampNum(values.registrationRotation, -180, 180, 0);
     $('#heroZoom').value = clampNum(values.heroZoom, 60, 160, 100);
+    $('#heroX').value = clampNum(values.heroX, -50, 50, 0);
+    $('#heroY').value = clampNum(values.heroY, -50, 50, 0);
     $('#infoWidth').value = clampNum(values.infoWidth, 45, 100, 100);
+    $('#infoScale').value = clampNum(values.infoScale, 50, 150, 100);
+    $('#infoX').value = clampNum(values.infoX, -50, 50, 0);
+    $('#infoY').value = clampNum(values.infoY, -50, 50, 0);
     $('#galleryWidth').value = clampNum(values.galleryWidth, 45, 100, 100);
+    $('#registrationScale').value = clampNum(values.registrationScale, 50, 180, 100);
+    $('#registrationX').value = clampNum(values.registrationX, -50, 50, 0);
+    $('#registrationY').value = clampNum(values.registrationY, -50, 50, 0);
   }
 
   function collectState() {
@@ -518,6 +570,7 @@
       rotationsList: $('#rotationsList').value,
       excludeList: $('#excludeList').value,
       visualSettings: readVisualSettings(),
+      aiExtras: window.__aiExtras || null,
     };
   }
 
@@ -569,6 +622,7 @@
       $('#rotationsList').value = state.rotationsList || '';
       $('#excludeList').value = state.excludeList || '';
       applyVisualSettings(state.visualSettings || {});
+      window.__aiExtras = state.aiExtras || null;
     } catch {}
   }
 
@@ -592,9 +646,13 @@
     HERO_BADGE:           'Gal Travels',
     HERO_H1:              'הטיול הבא שלכם מחכה',
     HERO_H2:              'מקומות מוגבלים — הירשמו עוד היום',
+    HERO_CTA_TEXT:        'להירשם לטיול',
     INFO_HEADLINE:        'אז מה הולך להיות?',
     INFO_LEAD:            'הצטרפו אלינו לטיול בגילאי {{AGE_RANGE}} — באווירה נינוחה וטבעית.',
+    PRICING_SUBTITLE:     'כולל הדרכה, תמונות מקצועיות, אירגון הטיול ואוכל בבוקר',
+    PRICE_INCLUDES_TEXT:  'הדרכה, תמונות מקצועיות, אירגון הטיול, אוכל בבוקר.',
     REGISTRATION_HEADLINE:'נפתחה הרשמה לטיול הקרוב!<br>מהרו לתפוס מקום',
+    FORM_SUBMIT_TEXT:     'הרשמה ומעבר לתשלום',
     TICKET_WS_LABEL:      'כרטיס יחיד',
     TICKET_WC_LABEL:      'כרטיס זוגי',
     TICKET_M_LABEL:       'כרטיס נוסף',
@@ -608,8 +666,8 @@
 
   // List of editable text token IDs (must match `t_XXX` inputs and template tokens)
   const TEXT_TOKENS = [
-    'PAGE_TITLE','PAGE_DESCRIPTION','HERO_BADGE','HERO_H1','HERO_H2',
-    'INFO_HEADLINE','INFO_LEAD','REGISTRATION_HEADLINE',
+    'PAGE_TITLE','PAGE_DESCRIPTION','HERO_BADGE','HERO_H1','HERO_H2','HERO_CTA_TEXT',
+    'INFO_HEADLINE','INFO_LEAD','PRICING_SUBTITLE','PRICE_INCLUDES_TEXT','REGISTRATION_HEADLINE','FORM_SUBMIT_TEXT',
     'TICKET_WS_LABEL','TICKET_WC_LABEL','TICKET_M_LABEL',
   ];
 
@@ -868,12 +926,69 @@
     const galleryMax = Math.round(1040 * (visuals.galleryWidth / 100));
     return ':root{' +
       '--hero-rotate:' + heroRotate + 'deg;' +
+      '--hero-x:' + visuals.heroX + '%;' +
+      '--hero-y:' + visuals.heroY + '%;' +
       '--info-rotate:' + infoRotate + 'deg;' +
+      '--info-scale:' + (visuals.infoScale / 100).toFixed(2) + ';' +
+      '--info-x:' + visuals.infoX + '%;' +
+      '--info-y:' + visuals.infoY + '%;' +
       '--registration-rotate:' + registrationRotate + 'deg;' +
+      '--registration-scale:' + (visuals.registrationScale / 100).toFixed(2) + ';' +
+      '--registration-x:' + visuals.registrationX + '%;' +
+      '--registration-y:' + visuals.registrationY + '%;' +
       '--hero-scale:' + (visuals.heroZoom / 100).toFixed(2) + ';' +
       '--info-max-width:' + visuals.infoWidth + '%;' +
       '--gallery-max-width:' + galleryMax + 'px;' +
       '}';
+  }
+
+  function parseJsonSafe(value, fallback) {
+    try { return JSON.parse(value); } catch { return fallback; }
+  }
+
+  function escHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[ch]));
+  }
+
+  function buildRegistrationFormsHTML(slots, cfg) {
+    const ticketMeta = [
+      { key: 'womenSingle', id: 'form-women-single', label: cfg.TICKET_WS_LABEL, priceKind: 'single' },
+      { key: 'womenCouple', id: 'form-women-couple', label: cfg.TICKET_WC_LABEL, priceKind: 'couple' },
+      { key: 'men', id: 'form-men', label: cfg.TICKET_M_LABEL, priceKind: 'single' },
+    ];
+    const available = ticketMeta.filter(item => slots && slots[item.key]);
+    if (!available.length) {
+      return '<div class="form-card active">' +
+        '<div class="form-title">ההרשמה תיפתח בקרוב</div>' +
+        '<p>לא נמצא קישור תשלום תקין בעמוד המקור. אפשר לעדכן את הקישור בעמוד שנוצר או להריץ חילוץ מחדש.</p>' +
+      '</div>';
+    }
+    const tabs = available.length > 1
+      ? '<div class="form-tabs">' + available.map((item, index) =>
+          '<button class="form-tab' + (index === 0 ? ' active' : '') + '" data-target="' + item.id + '" data-ticket="' + item.key + '">' +
+            escHtml(item.label) +
+          '</button>'
+        ).join('') + '</div>'
+      : '';
+    const submitText = escHtml(cfg.FORM_SUBMIT_TEXT || DEFAULTS.FORM_SUBMIT_TEXT);
+    const cards = available.map((item, index) =>
+      '<div class="form-card' + (index === 0 ? ' active' : '') + '" id="' + item.id + '" data-ticket="' + item.key + '">' +
+        '<div class="form-title">' + escHtml(item.label) + '</div>' +
+        '<div class="form-price" data-price-kind="' + item.priceKind + '">—</div>' +
+        '<label class="policy-check">' +
+          '<input type="checkbox" class="agree" required>' +
+          '<span>קראתי ואני מסכים/ה ל<a onclick="openModal(\'cancel\')">מדיניות הביטול</a></span>' +
+        '</label>' +
+        '<label class="policy-check">' +
+          '<input type="checkbox" class="agree" required>' +
+          '<span>קראתי ואני מסכים/ה ל<a onclick="openModal(\'photo\')">מדיניות התיעוד והצילום</a></span>' +
+        '</label>' +
+        '<a class="form-submit ticket-link" href="#" target="_blank" rel="noopener" aria-disabled="true">' + submitText + '</a>' +
+      '</div>'
+    ).join('');
+    return tabs + cards;
   }
 
   // ── Render template with config ──
@@ -909,6 +1024,10 @@
       if (isFreshSource && !window.__aiExtras) fillTextsPanel(cfg);
       // Always apply manual text overrides last (so user edits win)
       readTextOverrides(cfg);
+      cfg.REGISTRATION_FORMS_HTML = buildRegistrationFormsHTML(
+        parseJsonSafe(cfg.TICKET_LINKS_JSON, {}),
+        cfg
+      );
       lastHTML = await render(cfg);
       $('#preview').srcdoc = lastHTML;
       $('#dlBtn').disabled = false;
@@ -1279,9 +1398,13 @@
     setText('t_HERO_BADGE',           j.hero_badge);
     setText('t_HERO_H1',              j.hero_h1);
     setText('t_HERO_H2',              j.hero_h2);
+    setText('t_HERO_CTA_TEXT',        j.hero_cta_text);
     setText('t_INFO_HEADLINE',        j.info_headline);
     setText('t_INFO_LEAD',            j.info_lead);
+    setText('t_PRICING_SUBTITLE',     j.pricing_subtitle);
+    setText('t_PRICE_INCLUDES_TEXT',  j.price_includes_text);
     setText('t_REGISTRATION_HEADLINE',j.registration_headline);
+    setText('t_FORM_SUBMIT_TEXT',     j.form_submit_text);
     setText('t_TICKET_WS_LABEL',      j.ticket_ws_label);
     setText('t_TICKET_WC_LABEL',      j.ticket_wc_label);
     setText('t_TICKET_M_LABEL',       j.ticket_m_label);
@@ -1358,14 +1481,17 @@
   restoreState();
   renderPaletteRow();
   renderStyleRow();
+  renderTripTypeRow();
   [
     '#customPrimary','#customAccent','#rotationsList','#excludeList','#heroRotation',
-    '#infoRotation','#registrationRotation','#heroZoom','#infoWidth','#galleryWidth'
+    '#infoRotation','#registrationRotation','#heroZoom','#heroX','#heroY',
+    '#infoWidth','#infoScale','#infoX','#infoY','#galleryWidth',
+    '#registrationScale','#registrationX','#registrationY'
   ].forEach(sel => {
     const el = document.querySelector(sel);
     if (!el) return;
     el.addEventListener('input', saveState);
-    if (['#rotationsList','#excludeList','#heroRotation','#infoRotation','#registrationRotation','#heroZoom','#infoWidth','#galleryWidth'].includes(sel)) {
+    if (['#rotationsList','#excludeList','#heroRotation','#infoRotation','#registrationRotation','#heroZoom','#heroX','#heroY','#infoWidth','#infoScale','#infoX','#infoY','#galleryWidth','#registrationScale','#registrationX','#registrationY'].includes(sel)) {
       el.addEventListener('input', rerenderIfReady);
     }
   });
